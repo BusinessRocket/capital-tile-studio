@@ -1,0 +1,84 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import QuoteForm from '../components/QuoteForm.tsx';
+import { site } from '../data/site';
+
+const sms = `sms:${site.phoneHref}?&body=${encodeURIComponent(`Hi ${site.name}, I'd like a quote for tiling.`)}`;
+const channels = [
+  {
+    href: `tel:${site.phoneHref}`,
+    label: 'Call',
+    value: site.phone,
+    icon: 'M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2',
+  },
+  {
+    href: sms,
+    label: 'Text',
+    value: site.phone,
+    icon: 'M4 5h16v11H8l-4 4V5z',
+  },
+  {
+    href: `mailto:${site.email}?subject=${encodeURIComponent('Tiling quote request')}`,
+    label: 'Email',
+    value: site.email,
+    icon: 'M3 6h18v12H3zM3 7l9 6 9-6',
+  },
+];
+---
+
+<Layout
+  title="Contact & Get a Quote"
+  description={`Get a tiling quote in Canberra. Call or text ${site.phone}, email ${site.email}, or send your job details online.`}
+>
+  <PageHeader
+    eyebrow="Contact"
+    title="Let's get your project started."
+    lead="Call, text or email, or send the form below. A few details and photos are all we need to start your quote."
+  />
+
+  <section class="container-x pb-16">
+    <ul class="grid gap-4 sm:grid-cols-3">
+      {
+        channels.map((c, i) => (
+          <li data-reveal={i}>
+            <a href={c.href} class="card-lift flex h-full flex-col items-center gap-3 rounded-3xl bg-mist px-6 py-8 text-center">
+              <span class="flex h-14 w-14 items-center justify-center rounded-full bg-white text-bronze">
+                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d={c.icon} />
+                </svg>
+              </span>
+              <span class="text-xl font-semibold">{c.label}</span>
+              <span class="text-ink-soft break-all">{c.value}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section id="quote" class="scroll-mt-16 bg-mist py-20 md:py-28">
+    <div class="container-x grid gap-12 lg:grid-cols-5">
+      <div class="lg:col-span-2">
+        <p class="eyebrow" data-reveal>Get a quote</p>
+        <h2 class="mt-3 text-4xl font-semibold md:text-5xl" data-reveal="1">Tell us about the job.</h2>
+        <p class="mt-5 text-lg leading-relaxed text-ink-soft" data-reveal="2">
+          The more we know, the more accurate your quote. Rough measurements are fine; we will confirm everything on site.
+        </p>
+        <dl class="mt-10 space-y-5 text-ink-soft" data-reveal="3">
+          <div>
+            <dt class="text-sm font-semibold text-ink">Service area</dt>
+            <dd class="mt-1">Canberra and surrounding areas</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-ink">Introductory rate</dt>
+            <dd class="mt-1">${site.rates.intro} per m² for floor and wall tiling</dd>
+          </div>
+        </dl>
+      </div>
+      <div class="rounded-[2rem] bg-white p-6 shadow-[0_30px_60px_-40px_rgb(0_0_0/0.3)] md:p-10 lg:col-span-3">
+        <QuoteForm client:visible email={site.email} phoneHref={site.phoneHref} businessName={site.name} />
+      </div>
+    </div>
+  </section>
+</Layout>

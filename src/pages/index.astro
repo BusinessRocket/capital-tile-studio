@@ -1,16 +1,190 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import TileArt from '../components/TileArt.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { services, site } from '../data/site';
+
+const steps = [
+  { n: '01', title: 'Get in touch', body: 'Call, text or send the quote form with a few details and photos of the space.' },
+  { n: '02', title: 'Measure & quote', body: 'We look at the area, talk through tiles and layout, and give you a clear written quote.' },
+  { n: '03', title: 'Set out & tile', body: 'Every layout is planned before the first tile goes down, then laid square, flat and true.' },
+  { n: '04', title: 'Clean handover', body: 'Grout, silicone and a proper clean-up, so the room is ready to use.' },
+];
+
+const craft = [
+  { title: 'Planned set-out', body: 'Cuts placed where they will not be seen. Lines that meet at the corners.' },
+  { title: 'Flat and level', body: 'Floors and walls checked as we go, so tiles sit flush and edges stay crisp.' },
+  { title: 'Tidy sites', body: 'We protect the areas around the job and clean up as we go.' },
+];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout
+  title={`${site.name} | Premium Tiling in Canberra from $${site.rates.intro}/m²`}
+  description={`Canberra tilers for bathrooms, floors, feature walls, kitchen splashbacks and outdoor areas. Premium finish, introductory rate from $${site.rates.intro} per m². Call ${site.phone}.`}
+>
+  <!-- Hero -->
+  <section class="overflow-hidden">
+    <div class="container-x pt-14 text-center md:pt-24">
+      <p class="eyebrow rise">Canberra tiling</p>
+      <h1 class="rise mt-3 text-[3rem] leading-[1.02] font-semibold md:text-[5.5rem]" style="--d:1">
+        Tiling,<br class="sm:hidden" /> perfected.
+      </h1>
+      <p class="rise mx-auto mt-5 max-w-xl text-lg leading-relaxed text-ink-soft md:text-2xl md:leading-snug" style="--d:2">
+        Bathrooms, floors, feature walls and outdoor areas, laid with precision. Now from ${site.rates.intro} per m².
+      </p>
+      <div class="rise mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3" style="--d:3">
+        <a href="/contact/#quote" class="btn btn-primary">Get a quote</a>
+        <a href="/pricing/" class="link-arrow">See pricing</a>
+      </div>
+    </div>
+
+    <div class="rise container-x mt-12 md:mt-16" style="--d:4">
+      <div class="relative aspect-[4/3] overflow-hidden rounded-[2rem] shadow-[0_40px_80px_-40px_rgb(0_0_0/0.35)] sm:aspect-[16/9] md:aspect-[21/9]">
+        <TileArt
+          pattern="herringbone"
+          palette="marble"
+          width={1400}
+          height={600}
+          unit={52}
+          seed={7}
+          class="absolute inset-0 h-full w-full"
+          label="Illustration of marble-look tiles laid in a herringbone pattern"
+        />
+        <div class="absolute bottom-4 left-4 rounded-full bg-white/80 px-4 py-2 text-xs font-medium text-ink-soft backdrop-blur md:bottom-6 md:left-6">
+          Herringbone, illustrated
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Craft -->
+  <section class="container-x py-20 md:py-32">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="text-4xl font-semibold leading-tight md:text-6xl" data-reveal>Precision you can see.<br /><span class="text-stone">Quality you can feel.</span></h2>
+    </div>
+    <div class="mt-14 grid gap-px overflow-hidden rounded-3xl bg-line md:mt-20 md:grid-cols-3">
+      {
+        craft.map((c, i) => (
+          <div class="bg-canvas p-8 md:p-10" data-reveal={i}>
+            <h3 class="text-xl font-semibold">{c.title}</h3>
+            <p class="mt-3 leading-relaxed text-ink-soft">{c.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section class="bg-mist py-20 md:py-28">
+    <div class="container-x">
+      <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p class="eyebrow" data-reveal>Services</p>
+          <h2 class="mt-3 text-4xl font-semibold md:text-5xl" data-reveal="1">Every surface, done right.</h2>
+        </div>
+        <a href="/services/" class="link-arrow" data-reveal="2">All services</a>
+      </div>
+
+      <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          services.map((s, i) => (
+            <li data-reveal={i % 3}>
+              <a href={`/services/#${s.slug}`} class="card-lift group flex h-full flex-col overflow-hidden rounded-3xl bg-white">
+                <div class="relative aspect-[16/10] overflow-hidden">
+                  <TileArt
+                    pattern={s.pattern}
+                    palette={s.palette}
+                    width={640}
+                    height={400}
+                    unit={s.pattern === 'hex' ? 30 : 38}
+                    seed={i + 3}
+                    class="h-full w-full transition-transform duration-700 ease-[var(--ease-out-soft)] group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                  />
+                </div>
+                <div class="flex flex-1 flex-col p-6">
+                  <h3 class="text-xl font-semibold">{s.title}</h3>
+                  <p class="mt-2 flex-1 leading-relaxed text-ink-soft">{s.short}</p>
+                  <span class="link-arrow mt-3">Learn more</span>
+                </div>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- Price spotlight -->
+  <section class="container-x py-20 md:py-32 text-center">
+    <p class="eyebrow" data-reveal>Introductory rate</p>
+    <h2 class="mt-3 text-4xl font-semibold md:text-6xl" data-reveal="1">Premium finish.<br />Honest price.</h2>
+    <div class="mt-10 flex items-end justify-center gap-4" data-reveal="2">
+      <span class="text-[5.5rem] leading-none font-semibold tracking-tighter tabular-nums md:text-[9rem]">${site.rates.intro}</span>
+      <span class="pb-3 text-left text-lg leading-tight text-ink-soft md:pb-6 md:text-2xl">per m²<br /><s class="text-stone">${site.rates.standard}</s></span>
+    </div>
+    <p class="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-ink-soft" data-reveal="3">
+      Our introductory tiling rate for floors and walls, down from our standard ${site.rates.standard} per m². Every job is confirmed with a written quote after we measure up.
+    </p>
+    <div class="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-3" data-reveal="4">
+      <a href="/pricing/#estimate" class="btn btn-dark">Estimate your job</a>
+      <a href="/pricing/" class="link-arrow">How pricing works</a>
+    </div>
+  </section>
+
+  <!-- Process -->
+  <section class="on-dark bg-night py-20 text-white md:py-28">
+    <div class="container-x">
+      <p class="eyebrow" data-reveal>How it works</p>
+      <h2 class="mt-3 max-w-2xl text-4xl font-semibold md:text-5xl" data-reveal="1">Simple from first call to final clean.</h2>
+      <ol class="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        {
+          steps.map((s, i) => (
+            <li data-reveal={i}>
+              <span class="text-sm font-semibold text-bronze-light tabular-nums">{s.n}</span>
+              <h3 class="mt-3 text-xl font-semibold">{s.title}</h3>
+              <p class="mt-2 leading-relaxed text-white/70">{s.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- Areas -->
+  <section class="container-x py-20 md:py-28">
+    <div class="grid gap-10 md:grid-cols-2 md:items-center">
+      <div>
+        <p class="eyebrow" data-reveal>Service area</p>
+        <h2 class="mt-3 text-4xl font-semibold md:text-5xl" data-reveal="1">Local to Canberra.</h2>
+        <p class="mt-5 text-lg leading-relaxed text-ink-soft" data-reveal="2">
+          We tile homes right across Canberra and the surrounding region. Not sure if you are in range? Just ask.
+        </p>
+      </div>
+      <ul class="flex flex-wrap gap-2" data-reveal="2">
+        {site.areas.map((a) => <li class="rounded-full bg-mist px-4 py-2 text-sm font-medium text-ink-soft">{a}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  {
+    site.reviews.length > 0 && (
+      <section class="bg-mist py-20 md:py-28">
+        <div class="container-x">
+          <h2 class="text-4xl font-semibold md:text-5xl">What clients say.</h2>
+          <ul class="mt-12 grid gap-5 md:grid-cols-3">
+            {site.reviews.map((r) => (
+              <li class="rounded-3xl bg-white p-8">
+                <blockquote class="text-lg leading-relaxed">“{r.text}”</blockquote>
+                <p class="mt-4 text-sm text-stone">
+                  {r.name}, {r.suburb}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <CtaBand />
+</Layout>

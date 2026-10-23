@@ -1,0 +1,30 @@
+---
+import TileArt from './TileArt.astro';
+import { site } from '../data/site';
+
+interface Props {
+  title?: string;
+  lead?: string;
+}
+const {
+  title = "Let's talk about your project.",
+  lead = 'Tell us what you are tiling and roughly how big it is. We will come back to you with a clear quote.',
+} = Astro.props;
+const sms = `sms:${site.phoneHref}?&body=${encodeURIComponent(`Hi ${site.name}, I'd like a quote for tiling.`)}`;
+---
+
+<section class="container-x py-16 md:py-24">
+  <div class="on-dark relative overflow-hidden rounded-[2rem] bg-night text-white" data-reveal>
+    <TileArt pattern="hex" palette="charcoal" width={1200} height={600} unit={46} class="absolute inset-0 h-full w-full opacity-60" />
+    <div class="absolute inset-0 bg-gradient-to-r from-night via-night/85 to-night/30"></div>
+    <div class="relative px-6 py-14 md:px-16 md:py-20 max-w-2xl">
+      <h2 class="text-3xl font-semibold leading-tight md:text-5xl">{title}</h2>
+      <p class="mt-4 text-lg leading-relaxed text-white/75">{lead}</p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="/contact/#quote" class="btn btn-primary">Get a quote</a>
+        <a href={`tel:${site.phoneHref}`} class="btn btn-light">Call {site.phone}</a>
+        <a href={sms} class="btn text-white shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.35)] hover:shadow-[inset_0_0_0_1.5px_#fff]">Send a text</a>
+      </div>
+    </div>
+  </div>
+</section>

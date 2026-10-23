@@ -1,0 +1,75 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import TileArt from '../components/TileArt.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { services, site } from '../data/site';
+---
+
+<Layout
+  title="Tiling Services in Canberra"
+  description="Bathroom and ensuite tiling, floor tiling, feature walls, kitchen splashbacks, outdoor tiling and regrouting across Canberra and surrounding areas."
+>
+  <PageHeader
+    eyebrow="Services"
+    title="Every surface, done right."
+    lead="From a full bathroom to a single cracked tile, the same care goes into every job."
+  />
+
+  <nav aria-label="Services on this page" class="container-x pb-6">
+    <ul class="flex flex-wrap justify-center gap-2">
+      {
+        services.map((s) => (
+          <li>
+            <a href={`#${s.slug}`} class="inline-flex min-h-[44px] items-center rounded-full bg-mist px-4 text-sm font-medium text-ink-soft hover:bg-line hover:text-ink transition-colors">
+              {s.title}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  <div class="container-x space-y-6 py-10 md:space-y-10 md:py-16">
+    {
+      services.map((s, i) => (
+        <section id={s.slug} class="scroll-mt-20 grid overflow-hidden rounded-[2rem] bg-mist md:grid-cols-2" aria-labelledby={`${s.slug}-title`}>
+          <div class:list={['relative aspect-[4/3] md:aspect-auto md:min-h-[420px]', i % 2 === 1 && 'md:order-2']}>
+            <TileArt
+              pattern={s.pattern}
+              palette={s.palette}
+              width={800}
+              height={640}
+              unit={s.pattern === 'hex' ? 34 : 44}
+              seed={i + 11}
+              class="absolute inset-0 h-full w-full"
+              label={`Illustration of ${s.pattern} tile layout`}
+            />
+          </div>
+          <div class="flex flex-col justify-center p-8 md:p-14" data-reveal>
+            <h2 id={`${s.slug}-title`} class="text-3xl font-semibold md:text-4xl">
+              {s.title}
+            </h2>
+            <p class="mt-4 text-lg leading-relaxed text-ink-soft">{s.body}</p>
+            <ul class="mt-6 grid gap-2 sm:grid-cols-2">
+              {s.points.map((p) => (
+                <li class="flex items-start gap-2 text-ink-soft">
+                  <svg viewBox="0 0 20 20" class="mt-1 h-4 w-4 flex-none text-bronze" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 10.5l4 4 8-9" />
+                  </svg>
+                  {p}
+                </li>
+              ))}
+            </ul>
+            <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <a href="/contact/#quote" class="btn btn-primary">Get a quote</a>
+              <a href="/pricing/" class="link-arrow">From ${site.rates.intro}/m²</a>
+            </div>
+          </div>
+        </section>
+      ))
+    }
+  </div>
+
+  <CtaBand title="Not sure what you need?" lead="Describe the space and we will recommend the right tiles, layout and approach." />
+</Layout>

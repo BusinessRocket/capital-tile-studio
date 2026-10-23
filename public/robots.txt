@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://capital-tile-studio.workers.dev/sitemap-index.xml

@@ -1,0 +1,68 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import TileArt from '../components/TileArt.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { site } from '../data/site';
+
+const values = [
+  {
+    title: 'Detail first',
+    body: 'Tiling is unforgiving. A crooked line or a lippy edge is there for good, so we take the time to get the set-out right before we start.',
+  },
+  {
+    title: 'Straight answers',
+    body: 'Clear prices, a written quote and honest advice on tiles and layouts, even when the answer is a simpler option.',
+  },
+  {
+    title: 'Respect for your home',
+    body: 'We protect the areas around the job and clean up as we go, because you still have to live there while we work.',
+  },
+];
+---
+
+<Layout
+  title="About"
+  description={`${site.name} is a Canberra tiling business focused on premium workmanship at a fair price. Bathrooms, floors, walls, splashbacks and outdoor areas.`}
+>
+  <PageHeader
+    eyebrow="About"
+    title="Made in Canberra. Made to last."
+    lead={`${site.name} is a local tiling business built on one idea: a premium finish should not come with a premium price tag.`}
+  />
+
+  <section class="container-x pb-16 md:pb-24">
+    <div class="relative aspect-[16/10] overflow-hidden rounded-[2rem] md:aspect-[21/9]" data-reveal>
+      <TileArt pattern="stack" palette="sage" width={1400} height={600} unit={40} seed={5} class="absolute inset-0 h-full w-full" label="Illustration of sage green tiles laid in a vertical stack" />
+    </div>
+  </section>
+
+  <section class="container-x pb-20 md:pb-28">
+    <div class="mx-auto max-w-3xl space-y-6 text-lg leading-relaxed text-ink-soft md:text-xl" data-reveal>
+      <p>
+        <strong class="font-semibold text-ink">We tile homes.</strong> Bathrooms and ensuites, kitchen splashbacks, living-area floors, feature walls and outdoor entertaining spaces across Canberra and the surrounding region.
+      </p>
+      <p>
+        Every job gets the same approach: understand what you want, plan the layout properly, and lay each tile like it is the one people will notice. That is how a room ends up looking calm, balanced and built to last.
+      </p>
+    </div>
+  </section>
+
+  <section class="bg-mist py-20 md:py-28">
+    <div class="container-x">
+      <h2 class="text-center text-4xl font-semibold md:text-5xl" data-reveal>What we stand for.</h2>
+      <ul class="mt-12 grid gap-5 md:grid-cols-3">
+        {
+          values.map((v, i) => (
+            <li class="rounded-3xl bg-white p-8 md:p-10" data-reveal={i}>
+              <h3 class="text-xl font-semibold">{v.title}</h3>
+              <p class="mt-3 leading-relaxed text-ink-soft">{v.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <CtaBand />
+</Layout>

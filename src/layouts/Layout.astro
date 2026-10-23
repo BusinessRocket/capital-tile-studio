@@ -1,0 +1,234 @@
+---
+import '@fontsource-variable/inter';
+import '../styles/global.css';
+import Logo from '../components/Logo.astro';
+import { nav, site } from '../data/site';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const fullTitle = Astro.url.pathname === '/' ? title : `${title} | ${site.name}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og.png', Astro.site);
+const path = Astro.url.pathname;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'HomeAndConstructionBusiness',
+  '@id': new URL('/#business', Astro.site).href,
+  name: site.name,
+  description: 'Bathroom, floor, wall, splashback and outdoor tiling in Canberra and surrounding areas.',
+  url: new URL('/', Astro.site).href,
+  image: ogImage.href,
+  logo: new URL('/favicon.svg', Astro.site).href,
+  telephone: site.phoneHref,
+  email: site.email,
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: site.locality,
+    addressRegion: site.region,
+    addressCountry: 'AU',
+  },
+  areaServed: [{ '@type': 'City', name: 'Canberra' }, ...site.areas.map((name) => ({ '@type': 'Place', name }))],
+  ...(site.abn ? { taxID: site.abn } : {}),
+};
+---
+
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="theme-color" content="#fbfbfd" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_AU" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <script is:inline>
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('motion-ok');
+    </script>
+  </head>
+  <body class="min-h-dvh flex flex-col pb-[76px] md:pb-0">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:text-white"
+      >Skip to content</a
+    >
+
+    <header class="sticky top-0 z-40 border-b border-line/70 bg-canvas/80 backdrop-blur-xl backdrop-saturate-150">
+      <nav class="container-x flex h-14 items-center justify-between gap-4" aria-label="Main">
+        <a href="/" class="flex items-center gap-2.5 font-semibold tracking-tight min-h-[44px]" aria-label={`${site.name} home`}>
+          <Logo class="h-7 w-7 text-ink" />
+          <span class="text-[15px]">{site.name}</span>
+        </a>
+
+        <ul class="hidden md:flex items-center gap-1 text-sm">
+          {
+            nav.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  class:list={[
+                    'inline-flex items-center min-h-[44px] px-3 rounded-full transition-colors hover:text-ink',
+                    path.startsWith(item.href) ? 'text-ink font-semibold' : 'text-ink-soft',
+                  ]}
+                  aria-current={path.startsWith(item.href) ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="flex items-center gap-2">
+          <a href="/contact/#quote" class="btn btn-primary hidden sm:inline-flex !min-h-[38px] !px-4 text-sm">Get a quote</a>
+          <button
+            type="button"
+            class="md:hidden inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-mist cursor-pointer"
+            aria-controls="mobile-menu"
+            aria-expanded="false"
+            aria-label="Open menu"
+            data-menu-toggle
+          >
+            <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+              <path d="M4 8h16M4 16h16" data-icon-open></path>
+              <path d="M6 6l12 12M18 6L6 18" data-icon-close class="hidden"></path>
+            </svg>
+          </button>
+        </div>
+      </nav>
+
+      <div id="mobile-menu" class="md:hidden hidden border-t border-line/70 bg-canvas" data-menu>
+        <ul class="container-x py-3">
+          {
+            nav.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  class:list={[
+                    'flex items-center min-h-[52px] text-2xl font-semibold tracking-tight border-b border-line/60',
+                    path.startsWith(item.href) ? 'text-bronze' : 'text-ink',
+                  ]}
+                  aria-current={path.startsWith(item.href) ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </header>
+
+    <main id="main" class="flex-1" tabindex="-1">
+      <slot />
+    </main>
+
+    <footer class="bg-mist text-sm text-stone">
+      <div class="container-x py-14 grid gap-10 md:grid-cols-4">
+        <div class="md:col-span-2">
+          <a href="/" class="inline-flex items-center gap-2.5 font-semibold text-ink min-h-[44px]">
+            <Logo class="h-7 w-7 text-ink" />
+            {site.name}
+          </a>
+          <p class="mt-3 max-w-sm leading-relaxed">
+            Bathroom, floor, wall, splashback and outdoor tiling for homes across Canberra and surrounding areas.
+          </p>
+        </div>
+        <div>
+          <h2 class="font-semibold text-ink">Explore</h2>
+          <ul class="mt-3 space-y-1">
+            {
+              nav.map((item) => (
+                <li>
+                  <a href={item.href} class="inline-flex min-h-[36px] items-center hover:text-ink">
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+        <div>
+          <h2 class="font-semibold text-ink">Contact</h2>
+          <ul class="mt-3 space-y-1">
+            <li><a href={`tel:${site.phoneHref}`} class="inline-flex min-h-[36px] items-center hover:text-ink">{site.phone}</a></li>
+            <li><a href={`mailto:${site.email}`} class="inline-flex min-h-[36px] items-center hover:text-ink break-all">{site.email}</a></li>
+            <li class="pt-1">{site.locality}, {site.region}</li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-line">
+        <div class="container-x flex flex-col gap-2 py-6 sm:flex-row sm:justify-between">
+          <p>&copy; {new Date().getFullYear()} {site.name}.{site.abn && ` ABN ${site.abn}.`}</p>
+          <p>Proudly tiling Canberra.</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Mobile call/quote bar -->
+    <div
+      class="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-line/70 bg-canvas/90 backdrop-blur-xl px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+    >
+      <div class="grid grid-cols-2 gap-3">
+        <a href={`tel:${site.phoneHref}`} class="btn btn-ghost w-full">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg>
+          Call
+        </a>
+        <a href="/contact/#quote" class="btn btn-primary w-full">Get a quote</a>
+      </div>
+    </div>
+
+    <script>
+      import { inView } from 'motion';
+      import { animate } from 'motion/mini';
+
+      const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+      const menu = document.querySelector<HTMLElement>('[data-menu]');
+      toggle?.addEventListener('click', () => {
+        const open = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        menu?.classList.toggle('hidden', !open);
+        toggle.querySelector('[data-icon-open]')?.classList.toggle('hidden', open);
+        toggle.querySelector('[data-icon-close]')?.classList.toggle('hidden', !open);
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') toggle.click();
+      });
+
+      if (document.documentElement.classList.contains('motion-ok')) {
+        inView(
+          '[data-reveal]',
+          (el) => {
+            const delay = Number((el as HTMLElement).dataset.reveal || 0) * 0.06;
+            animate(
+              el,
+              { opacity: [0, 1], transform: ['translateY(18px)', 'translateY(0)'] },
+              { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] },
+            );
+          },
+          { amount: 0.15 },
+        );
+      }
+    </script>
+  </body>
+</html>

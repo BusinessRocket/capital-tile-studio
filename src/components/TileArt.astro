@@ -1,0 +1,51 @@
+---
+import type { TilePalette, TilePattern } from '../data/site';
+import { renderTiles } from '../lib/tiles';
+
+interface Props {
+  pattern: TilePattern;
+  palette: TilePalette;
+  width?: number;
+  height?: number;
+  unit?: number;
+  seed?: number;
+  label?: string;
+  class?: string;
+}
+
+const { pattern, palette, width = 800, height = 600, unit, seed, label, class: className } = Astro.props;
+const art = renderTiles({ pattern, palette, width, height, unit, seed });
+const id = `t${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<svg
+  viewBox={`0 0 ${width} ${height}`}
+  preserveAspectRatio="xMidYMid slice"
+  class={className}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  focusable="false"
+>
+  <defs>
+    <linearGradient id={`${id}-light`} x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity={art.dark ? 0.16 : 0.45}></stop>
+      <stop offset="0.55" stop-color="#fff" stop-opacity="0"></stop>
+      <stop offset="1" stop-color="#000" stop-opacity={art.dark ? 0.35 : 0.12}></stop>
+    </linearGradient>
+  </defs>
+  <rect width={width} height={height} fill={art.grout}></rect>
+  <g transform={art.transform} stroke={art.grout} stroke-width={art.groutWidth} stroke-linejoin="round">
+    {art.tiles.map((t) => <polygon points={t.points} fill={t.fill}></polygon>)}
+  </g>
+  {
+    art.veins.length > 0 && (
+      <g fill="none" stroke={art.vein} stroke-opacity="0.22" stroke-width="1.2">
+        {art.veins.map((d) => (
+          <path d={d} />
+        ))}
+      </g>
+    )
+  }
+  <rect width={width} height={height} fill={`url(#${id}-light)`}></rect>
+</svg>

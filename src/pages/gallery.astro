@@ -1,0 +1,59 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import TileArt from '../components/TileArt.astro';
+import CtaBand from '../components/CtaBand.astro';
+import type { TilePalette, TilePattern } from '../data/site';
+
+// TODO (owner): replace these illustrations with real job photos as they come in.
+const items: { pattern: TilePattern; palette: TilePalette; style: string; wide?: boolean }[] = [
+  { pattern: 'herringbone', palette: 'sand', style: 'Herringbone floor', wide: true },
+  { pattern: 'subway', palette: 'marble', style: 'Subway wall' },
+  { pattern: 'hex', palette: 'sage', style: 'Hexagon splashback' },
+  { pattern: 'stack', palette: 'navy', style: 'Vertical stack feature wall' },
+  { pattern: 'grid', palette: 'charcoal', style: 'Large-format outdoor', wide: true },
+  { pattern: 'chevron', palette: 'terracotta', style: 'Chevron floor' },
+];
+---
+
+<Layout
+  title="Gallery"
+  description="Tile layouts and finishes from Capital Tile Studio in Canberra. Real project photos coming soon."
+>
+  <PageHeader
+    eyebrow="Gallery"
+    title="Project photos, coming soon."
+    lead="Our own job photos are on the way. Until then, here are illustrations of the tile layouts we lay most often."
+  />
+
+  <section class="container-x pb-10">
+    <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        items.map((it, i) => (
+          <li class:list={['group', it.wide && 'lg:col-span-2']} data-reveal={i % 3}>
+            <figure class="relative overflow-hidden rounded-3xl bg-mist">
+              <div class:list={['relative', it.wide ? 'aspect-[4/3] lg:aspect-[2/1]' : 'aspect-[4/3]']}>
+                <TileArt
+                  pattern={it.pattern}
+                  palette={it.palette}
+                  width={it.wide ? 1000 : 600}
+                  height={it.wide ? 500 : 450}
+                  unit={it.pattern === 'hex' ? 30 : 40}
+                  seed={i + 21}
+                  class="absolute inset-0 h-full w-full"
+                  label={`Illustration of a ${it.style.toLowerCase()}`}
+                />
+              </div>
+              <figcaption class="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-2xl bg-white/85 px-4 py-3 text-sm backdrop-blur">
+                <span class="font-semibold text-ink">{it.style}</span>
+                <span class="flex-none rounded-full bg-mist px-2.5 py-1 text-xs font-medium text-stone">Illustration</span>
+              </figcaption>
+            </figure>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <CtaBand title="Like what you see?" lead="Get in touch to book in at our introductory rate." />
+</Layout>
