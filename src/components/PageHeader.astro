@@ -1,15 +1,20 @@
 ---
+import FloatingTiles from './FloatingTiles.astro';
+import type { TilePalette, TilePattern } from '../data/site';
+
 interface Props {
   eyebrow: string;
   title: string;
   lead: string;
+  tiles?: { pattern: TilePattern; palette: TilePalette }[];
 }
-const { eyebrow, title, lead } = Astro.props;
+const { eyebrow, title, lead, tiles } = Astro.props;
 ---
 
-<section class="container-x pt-16 pb-12 md:pt-28 md:pb-20 text-center">
-  <p class="eyebrow rise">{eyebrow}</p>
-  <h1 class="rise mt-3 text-[2.5rem] leading-[1.05] font-semibold md:text-7xl" style="--d:1">{title}</h1>
-  <p class="rise mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft md:text-xl" style="--d:2">{lead}</p>
+<section class="container-x overflow-x-clip pt-12 pb-12 md:pt-20 md:pb-20 text-center">
+  <div class="rise"><FloatingTiles tiles={tiles} /></div>
+  <p class="eyebrow rise" style="--d:1">{eyebrow}</p>
+  <h1 class="rise mt-3 text-[2.5rem] leading-[1.05] font-semibold md:text-7xl" style="--d:2">{title}</h1>
+  <p class="rise mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft md:text-xl" style="--d:3">{lead}</p>
   <slot />
 </section>

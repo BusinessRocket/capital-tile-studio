@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import TileArt from '../components/TileArt.astro';
 import CtaBand from '../components/CtaBand.astro';
+import TileExperience from '../components/TileExperience.astro';
 import { services, site } from '../data/site';
 
 const steps = [
@@ -22,40 +23,7 @@ const craft = [
   title={`${site.name} | Premium Tiling in Canberra from $${site.rates.intro}/m²`}
   description={`Canberra tilers for bathrooms, floors, feature walls, kitchen splashbacks and outdoor areas. Premium finish, introductory rate from $${site.rates.intro} per m². Call ${site.phone}.`}
 >
-  <!-- Hero -->
-  <section class="overflow-hidden">
-    <div class="container-x pt-14 text-center md:pt-24">
-      <p class="eyebrow rise">Canberra tiling</p>
-      <h1 class="rise mt-3 text-[3rem] leading-[1.02] font-semibold md:text-[5.5rem]" style="--d:1">
-        Tiling,<br class="sm:hidden" /> perfected.
-      </h1>
-      <p class="rise mx-auto mt-5 max-w-xl text-lg leading-relaxed text-ink-soft md:text-2xl md:leading-snug" style="--d:2">
-        Bathrooms, floors, feature walls and outdoor areas, laid with precision. Now from ${site.rates.intro} per m².
-      </p>
-      <div class="rise mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3" style="--d:3">
-        <a href="/contact/#quote" class="btn btn-primary">Get a quote</a>
-        <a href="/pricing/" class="link-arrow">See pricing</a>
-      </div>
-    </div>
-
-    <div class="rise container-x mt-12 md:mt-16" style="--d:4">
-      <div class="relative aspect-[4/3] overflow-hidden rounded-[2rem] shadow-[0_40px_80px_-40px_rgb(0_0_0/0.35)] sm:aspect-[16/9] md:aspect-[21/9]">
-        <TileArt
-          pattern="herringbone"
-          palette="marble"
-          width={1400}
-          height={600}
-          unit={52}
-          seed={7}
-          class="absolute inset-0 h-full w-full"
-          label="Illustration of marble-look tiles laid in a herringbone pattern"
-        />
-        <div class="absolute bottom-4 left-4 rounded-full bg-white/80 px-4 py-2 text-xs font-medium text-ink-soft backdrop-blur md:bottom-6 md:left-6">
-          Herringbone, illustrated
-        </div>
-      </div>
-    </div>
-  </section>
+  <TileExperience />
 
   <!-- Craft -->
   <section class="container-x py-20 md:py-32">
@@ -111,23 +79,6 @@ const craft = [
           ))
         }
       </ul>
-    </div>
-  </section>
-
-  <!-- Price spotlight -->
-  <section class="container-x py-20 md:py-32 text-center">
-    <p class="eyebrow" data-reveal>Introductory rate</p>
-    <h2 class="mt-3 text-4xl font-semibold md:text-6xl" data-reveal="1">Premium finish.<br />Honest price.</h2>
-    <div class="mt-10 flex items-end justify-center gap-4" data-reveal="2">
-      <span class="text-[5.5rem] leading-none font-semibold tracking-tighter tabular-nums md:text-[9rem]">${site.rates.intro}</span>
-      <span class="pb-3 text-left text-lg leading-tight text-ink-soft md:pb-6 md:text-2xl">per m²<br /><s class="text-stone">${site.rates.standard}</s></span>
-    </div>
-    <p class="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-ink-soft" data-reveal="3">
-      Our introductory tiling rate for floors and walls, down from our standard ${site.rates.standard} per m². Every job is confirmed with a written quote after we measure up.
-    </p>
-    <div class="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-3" data-reveal="4">
-      <a href="/pricing/#estimate" class="btn btn-dark">Estimate your job</a>
-      <a href="/pricing/" class="link-arrow">How pricing works</a>
     </div>
   </section>
 

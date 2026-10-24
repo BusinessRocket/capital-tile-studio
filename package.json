@@ -24,9 +24,11 @@
     "motion": "^14.6.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "three": "^0.186.1"
   },
   "devDependencies": {
+    "@types/three": "^0.186.0",
     "wrangler": "^4.152.0"
   }
 }

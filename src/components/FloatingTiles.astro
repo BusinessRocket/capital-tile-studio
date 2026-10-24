@@ -1,0 +1,90 @@
+---
+// A small CSS-3D stack of tile samples that floats and follows the pointer.
+import TileArt from './TileArt.astro';
+import type { TilePalette, TilePattern } from '../data/site';
+
+interface Props {
+  tiles?: { pattern: TilePattern; palette: TilePalette }[];
+}
+
+const {
+  tiles = [
+    { pattern: 'herringbone', palette: 'marble' },
+    { pattern: 'stack', palette: 'sage' },
+    { pattern: 'hex', palette: 'navy' },
+    { pattern: 'subway', palette: 'sand' },
+    { pattern: 'chevron', palette: 'terracotta' },
+  ],
+} = Astro.props;
+
+// Fanned positions: [x, y, z, rotateZ]
+const spots = [
+  [0, 0, 60, -4],
+  [-120, 18, 0, -16],
+  [120, 14, 10, 14],
+  [-62, -40, -70, -8],
+  [64, -46, -90, 9],
+];
+---
+
+<div class="ft mx-auto mb-8 h-44 w-full max-w-md md:mb-10 md:h-56" aria-hidden="true">
+  <div class="ft-rig">
+    {
+      tiles.slice(0, spots.length).map((t, i) => {
+        const [x, y, z, r] = spots[i];
+        return (
+          <div class="ft-tile" style={`--x:${x}px;--y:${y}px;--z:${z}px;--r:${r}deg;--i:${i}`}>
+            <TileArt pattern={t.pattern} palette={t.palette} width={240} height={240} unit={t.pattern === 'hex' ? 22 : 28} seed={i + 40} class="h-full w-full" />
+          </div>
+        );
+      })
+    }
+  </div>
+</div>
+
+<style>
+  .ft {
+    perspective: 900px;
+    display: grid;
+    place-items: center;
+  }
+  .ft-rig {
+    position: relative;
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+    transform: rotateX(calc(18deg + var(--py, 0) * -14deg)) rotateY(calc(var(--px, 0) * 22deg));
+    transition: transform 0.8s var(--ease-out-soft);
+  }
+  .ft-tile {
+    position: absolute;
+    width: 7.5rem;
+    height: 7.5rem;
+    margin: -3.75rem 0 0 -3.75rem;
+    border-radius: 1.1rem;
+    overflow: hidden;
+    box-shadow: 0 30px 40px -24px rgb(0 0 0 / 0.45), inset 0 0 0 1px rgb(255 255 255 / 0.25);
+    transform: translate3d(var(--x), var(--y), var(--z)) rotateZ(var(--r));
+  }
+  @media (min-width: 768px) {
+    .ft-tile {
+      width: 9rem;
+      height: 9rem;
+      margin: -4.5rem 0 0 -4.5rem;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ft-tile {
+      animation: ft-float 7s ease-in-out infinite alternate;
+      animation-delay: calc(var(--i) * -1.3s);
+    }
+  }
+  @keyframes ft-float {
+    from {
+      transform: translate3d(var(--x), calc(var(--y) + 6px), var(--z)) rotateZ(var(--r)) rotateX(4deg);
+    }
+    to {
+      transform: translate3d(var(--x), calc(var(--y) - 8px), calc(var(--z) + 24px)) rotateZ(calc(var(--r) * 0.6)) rotateX(-4deg);
+    }
+  }
+</style>

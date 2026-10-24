@@ -215,7 +215,46 @@ const schema = {
         if (e.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') toggle.click();
       });
 
-      if (document.documentElement.classList.contains('motion-ok')) {
+      const motionOk = document.documentElement.classList.contains('motion-ok');
+      const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+      if (motionOk && finePointer) {
+        // 3D card tilt and glare.
+        document.querySelectorAll<HTMLElement>('.card-lift').forEach((el) => {
+          el.addEventListener('pointermove', (e) => {
+            const r = el.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width;
+            const y = (e.clientY - r.top) / r.height;
+            el.style.setProperty('--ry', `${(x - 0.5) * 9}deg`);
+            el.style.setProperty('--rx', `${(0.5 - y) * 7}deg`);
+            el.style.setProperty('--gx', `${x * 100}%`);
+            el.style.setProperty('--gy', `${y * 100}%`);
+          });
+          el.addEventListener('pointerleave', () => {
+            el.style.removeProperty('--rx');
+            el.style.removeProperty('--ry');
+          });
+        });
+
+        // Page-wide pointer position for floating 3D tiles.
+        const root = document.documentElement;
+        let queued = false;
+        window.addEventListener(
+          'pointermove',
+          (e) => {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(() => {
+              root.style.setProperty('--px', (e.clientX / innerWidth - 0.5).toFixed(3));
+              root.style.setProperty('--py', (e.clientY / innerHeight - 0.5).toFixed(3));
+              queued = false;
+            });
+          },
+          { passive: true },
+        );
+      }
+
+      if (motionOk) {
         inView(
           '[data-reveal]',
           (el) => {
@@ -224,7 +263,12 @@ const schema = {
               el,
               { opacity: [0, 1], transform: ['translateY(18px)', 'translateY(0)'] },
               { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] },
-            );
+            ).finished.then(() => {
+              // Hand the element back to CSS so hover/tilt transforms still work.
+              (el as HTMLElement).dataset.revealed = '';
+              (el as HTMLElement).style.removeProperty('transform');
+              (el as HTMLElement).style.removeProperty('opacity');
+            });
           },
           { amount: 0.15 },
         );

@@ -31,7 +31,7 @@ const items: { pattern: TilePattern; palette: TilePalette; style: string; wide?:
       {
         items.map((it, i) => (
           <li class:list={['group', it.wide && 'lg:col-span-2']} data-reveal={i % 3}>
-            <figure class="relative overflow-hidden rounded-3xl bg-mist">
+            <figure class="card-lift relative overflow-hidden rounded-3xl bg-mist">
               <div class:list={['relative', it.wide ? 'aspect-[4/3] lg:aspect-[2/1]' : 'aspect-[4/3]']}>
                 <TileArt
                   pattern={it.pattern}

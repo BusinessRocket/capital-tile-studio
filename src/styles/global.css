@@ -148,18 +148,61 @@
     color: var(--color-bronze-light);
   }
 
+  /* Cards tilt in 3D toward the pointer (vars set in Layout script) and lift on hover. */
   .card-lift {
-    transition: transform 300ms var(--ease-out-soft), box-shadow 300ms var(--ease-out-soft);
+    position: relative;
+    transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--lift, 0px));
+    transition: transform 450ms var(--ease-out-soft), box-shadow 300ms var(--ease-out-soft);
+    will-change: transform;
   }
   .card-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.25);
+    --lift: -4px;
+    box-shadow: 0 30px 60px -28px rgb(0 0 0 / 0.3);
+  }
+  .card-lift::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(circle at var(--gx, 50%) var(--gy, 0%), rgb(255 255 255 / 0.35), transparent 55%);
+    opacity: 0;
+    transition: opacity 300ms var(--ease-out-soft);
+  }
+  .card-lift:hover::after {
+    opacity: 1;
   }
   @media (prefers-reduced-motion: reduce) {
+    .card-lift,
     .card-lift:hover,
     .btn:active {
       transform: none;
     }
+  }
+}
+
+/* Smooth cross-page transitions (browsers without support just navigate normally). */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+  ::view-transition-old(root) {
+    animation: vt-out 0.22s ease-in both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-in 0.5s var(--ease-out-soft) both;
+  }
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
   }
 }
 
@@ -178,7 +221,7 @@
 }
 
 /* Scroll reveal: only hidden when JS has confirmed motion is allowed. */
-.motion-ok [data-reveal] {
+.motion-ok [data-reveal]:not([data-revealed]) {
   opacity: 0;
   transform: translateY(18px);
 }
