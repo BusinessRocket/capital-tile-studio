@@ -62,7 +62,7 @@ export default function Estimator({ labour, supplied }: Props) {
               id={`${id}-area`}
               type="range"
               min={1}
-              max={150}
+              max={1000}
               step={1}
               value={area}
               onChange={(e) => setArea(Number(e.target.value))}
