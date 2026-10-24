@@ -19,13 +19,13 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
       <rect width="22" height="22" rx="4" fill="#1d1d1f"/>
       <rect x="26" width="22" height="22" rx="4" fill="#1d1d1f" opacity="0.35"/>
       <rect y="26" width="22" height="22" rx="4" fill="#1d1d1f" opacity="0.35"/>
-      <rect x="26" y="26" width="22" height="22" rx="4" fill="#a8540f"/>
+      <rect x="26" y="26" width="22" height="22" rx="4" fill="#8a6a35"/>
       <text x="66" y="34" font-size="28" font-weight="600" fill="#1d1d1f">Capital Tile Studio</text>
     </g>
     <text x="72" y="300" font-size="84" font-weight="700" fill="#1d1d1f" letter-spacing="-2">Tiling,</text>
     <text x="72" y="392" font-size="84" font-weight="700" fill="#1d1d1f" letter-spacing="-2">perfected.</text>
     <text x="72" y="462" font-size="30" fill="#424245">Premium tiling across Canberra</text>
-    <text x="72" y="540" font-size="30" font-weight="600" fill="#a8540f">Floors from $65 per m²  ·  0435 151 933</text>
+    <text x="72" y="540" font-size="30" font-weight="600" fill="#8a6a35">Floors from $65 per m²  ·  0435 151 933</text>
   </g>
 </svg>`;
 

@@ -35,7 +35,7 @@ export default function Estimator({ labour, supplied }: Props) {
                   onChange={() => setSupply(o.value)}
                   className="peer sr-only"
                 />
-                <span className="flex h-full flex-col rounded-2xl border border-line p-4 transition-colors hover:border-stone peer-checked:border-ink peer-checked:bg-ink peer-checked:text-white peer-focus-visible:ring-4 peer-focus-visible:ring-[#a8540f]/30">
+                <span className="flex h-full flex-col rounded-2xl border border-line p-4 transition-colors hover:border-stone peer-checked:border-ink peer-checked:bg-ink peer-checked:text-white peer-focus-visible:ring-4 peer-focus-visible:ring-[#8a6a35]/30">
                   <span className="font-semibold">{o.label}</span>
                   <span className="mt-1 text-sm opacity-75">{o.hint}</span>
                   <span className="mt-2 text-sm font-semibold tabular-nums">{aud.format(o.rate)}/m²</span>
@@ -68,7 +68,7 @@ export default function Estimator({ labour, supplied }: Props) {
               onChange={(e) => setArea(Number(e.target.value))}
               aria-describedby={`${id}-area-hint`}
               aria-valuetext={`${area} square metres`}
-              className="h-11 w-full cursor-pointer accent-[#a8540f]"
+              className="h-11 w-full cursor-pointer accent-[#8a6a35]"
             />
             <input
               type="number"

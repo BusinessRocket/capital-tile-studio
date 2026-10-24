@@ -6,5 +6,5 @@
   <rect class="a" x="2" y="2" width="13" height="13" rx="2.5"/>
   <rect class="a" x="17" y="2" width="13" height="13" rx="2.5" opacity="0.35"/>
   <rect class="a" x="2" y="17" width="13" height="13" rx="2.5" opacity="0.35"/>
-  <rect x="17" y="17" width="13" height="13" rx="2.5" fill="#a8540f"/>
+  <rect x="17" y="17" width="13" height="13" rx="2.5" fill="#8a6a35"/>
 </svg>
