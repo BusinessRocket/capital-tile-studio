@@ -93,6 +93,48 @@
     background: var(--color-bronze-deep);
     box-shadow: 0 8px 24px -10px rgb(168 84 15 / 0.6);
   }
+  /* Bronze glass: layered gloss, inner highlight and a sheen that follows the pointer. */
+  .btn-glass {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: linear-gradient(180deg, #b8641c 0%, #9a4c0d 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.45),
+      inset 0 -1px 0 rgb(0 0 0 / 0.25),
+      inset 0 0 0 1px rgb(255 255 255 / 0.12),
+      0 10px 28px -12px rgb(168 84 15 / 0.75);
+    text-shadow: 0 1px 0 rgb(0 0 0 / 0.18);
+  }
+  .btn-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.32), rgb(255 255 255 / 0) 52%);
+  }
+  .btn-glass::after {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    z-index: -1;
+    background: radial-gradient(circle at var(--sx, 30%) var(--sy, 0%), rgb(255 236 210 / 0.55), transparent 35%);
+    opacity: 0.55;
+    transition: opacity 0.3s var(--ease-out-soft);
+  }
+  .btn-glass:hover {
+    background: linear-gradient(180deg, #a85a16 0%, #8a430b 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.5),
+      inset 0 -1px 0 rgb(0 0 0 / 0.25),
+      inset 0 0 0 1px rgb(255 255 255 / 0.16),
+      0 16px 36px -12px rgb(168 84 15 / 0.85);
+  }
+  .btn-glass:hover::after {
+    opacity: 1;
+  }
+
   .btn-dark {
     background: var(--color-ink);
     color: #fff;

@@ -48,7 +48,7 @@ const chapters = [
           Bathrooms, floors, feature walls and outdoor areas, laid with precision. Floor tiling from ${site.rates.labour} per m².
         </p>
         <div class="rise mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3" style="--d:3">
-          <a href="/contact/#quote" class="btn btn-primary">Get a quote</a>
+          <a href="/contact/#quote" class="btn btn-primary btn-glass">Get a quote</a>
           <a href="/pricing/" class="link-arrow">See pricing</a>
         </div>
       </div>
@@ -90,10 +90,35 @@ const chapters = [
         </div>
         <p class="mt-5 leading-relaxed text-ink-soft">Confirmed with a written quote after we measure up.</p>
         <div class="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3">
-          <a href="/contact/#quote" class="btn btn-primary">Get a quote</a>
+          <a href="/contact/#quote" class="btn btn-primary btn-glass">Get a quote</a>
           <a href="/pricing/#estimate" class="link-arrow">Estimate your job</a>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Showroom: try a floor finish live. Only shown once the 3D scene is running. -->
+  <div class="xp-switch" data-xp-switch hidden>
+    <div class="xp-card flex items-center gap-1 rounded-full p-1.5" role="group" aria-label="Try a floor finish">
+      <span class="hidden px-3 text-sm font-medium text-ink-soft sm:inline">Try a floor</span>
+      {
+        [
+          { id: 'marble', label: 'Marble', swatch: '#ece8e1' },
+          { id: 'sage', label: 'Sage', swatch: '#9fac94' },
+          { id: 'terracotta', label: 'Terracotta', swatch: '#c4714d' },
+          { id: 'charcoal', label: 'Charcoal', swatch: '#3d3d40' },
+        ].map((s, i) => (
+          <button
+            type="button"
+            class="xp-chip"
+            data-style={s.id}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+          >
+            <span class="h-4 w-4 flex-none rounded-full shadow-[inset_0_0_0_1px_rgb(0_0_0/0.12)]" style={`background:${s.swatch}`}></span>
+            <span class="xp-chip-label">{s.label}</span>
+          </button>
+        ))
+      }
     </div>
   </div>
 </section>
@@ -114,6 +139,65 @@ const chapters = [
   }
   [data-xp-ready] .xp-fallback {
     opacity: 0;
+  }
+  .xp-switch {
+    position: fixed;
+    left: 50%;
+    top: 4.25rem;
+    z-index: 30;
+    max-width: calc(100vw - 1.5rem);
+    transform: translate(-50%, -8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s var(--ease-out-soft), transform 0.4s var(--ease-out-soft);
+  }
+  @media (min-width: 768px) {
+    .xp-switch {
+      top: auto;
+      bottom: 1.5rem;
+      transform: translate(-50%, 8px);
+    }
+  }
+  .xp-switch[data-on] {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    pointer-events: auto;
+  }
+  .xp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 40px;
+    padding: 0 0.85rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+  }
+  .xp-chip:hover {
+    background: rgb(0 0 0 / 0.05);
+  }
+  .xp-chip[aria-pressed='true'] {
+    background: var(--color-ink);
+    color: #fff;
+  }
+  /* Small phones: colour dots only, with the selected finish named. */
+  @media (max-width: 430px) {
+    .xp-chip {
+      padding: 0 0.7rem;
+      min-width: 44px;
+      justify-content: center;
+    }
+    .xp-chip:not([aria-pressed='true']) .xp-chip-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
   }
   @media (prefers-reduced-motion: no-preference) {
     .xp-hint svg {
@@ -162,6 +246,28 @@ const chapters = [
         }).observe(root);
         document.addEventListener('visibilitychange', sync);
         sync();
+
+        // Floor switcher: visible while the floor is on screen.
+        const sw = document.querySelector<HTMLElement>('[data-xp-switch]');
+        if (sw) {
+          sw.hidden = false;
+          const chips = sw.querySelectorAll<HTMLButtonElement>('[data-style]');
+          chips.forEach((chip) =>
+            chip.addEventListener('click', () => {
+              chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+              scene.setFloorStyle(chip.dataset.style as Parameters<typeof scene.setFloorStyle>[0]);
+            }),
+          );
+          const showSwitch = () => {
+            const p = progress();
+            const r = root.getBoundingClientRect();
+            const on = p > 0.28 && r.bottom > window.innerHeight * 0.6;
+            sw.toggleAttribute('data-on', on);
+            sw.inert = !on;
+          };
+          addEventListener('scroll', showSwitch, { passive: true });
+          showSwitch();
+        }
       } catch (err) {
         // The static fallback artwork stays visible if 3D fails for any reason.
         console.warn('3D scene unavailable', err);

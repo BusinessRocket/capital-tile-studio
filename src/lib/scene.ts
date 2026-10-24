@@ -10,6 +10,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { glazeTexture, marbleTexture, perTileUv } from './textures';
 
 type Placement = { pos: THREE.Vector3; quat: THREE.Quaternion };
+export type FloorStyle = 'marble' | 'sage' | 'terracotta' | 'charcoal';
 
 interface TileGroup {
   mesh: THREE.InstancedMesh;
@@ -366,12 +367,78 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   const BATH_AT = new THREE.Vector3(1.9, 0.04, -3.05);
   scene.add(bath);
 
+  // Hero showpiece: one large polished slab turning in the light before the room builds.
+  const slab = new THREE.Mesh(
+    new RoundedBoxGeometry(1.5, 0.06, 1.5, 3, 0.022),
+    new THREE.MeshPhysicalMaterial({ map: marble, roughness: 0.07, clearcoat: 1, clearcoatRoughness: 0.04 }),
+  );
+  slab.castShadow = shadows;
+  scene.add(slab);
+
+  // Showroom mode: alternative floor finishes sharing the same layout. Switching
+  // re-tiles the floor in a wave from the centre.
+  const floorStyles: Record<FloorStyle, THREE.InstancedMesh> = { marble: floor.mesh } as Record<FloorStyle, THREE.InstancedMesh>;
+  const styleDefs: [FloorStyle, THREE.MeshPhysicalMaterial, string[]][] = [
+    ['sage', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.07, 256, 9), roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.1 }), ['#9fac94', '#94a189', '#a8b39e', '#8d9a83', '#a1ad97']],
+    ['terracotta', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.1, 256, 13), roughness: 0.6, clearcoat: 0.15, clearcoatRoughness: 0.5 }), ['#c4714d', '#ba6744', '#cc7b57', '#b3613e', '#c06c48']],
+    ['charcoal', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.05, 256, 17), roughness: 0.32, clearcoat: 0.5, clearcoatRoughness: 0.25 }), ['#3d3d40', '#363639', '#434347', '#313134']],
+  ];
+  const sr = rng(91);
+  const styleColor = new THREE.Color();
+  for (const [name, mat, colors] of styleDefs) {
+    perTileUv(mat, 0.3);
+    const mesh = new THREE.InstancedMesh(floor.mesh.geometry, mat, floor.target.length);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.castShadow = mesh.receiveShadow = shadows;
+    for (let i = 0; i < floor.target.length; i++) mesh.setColorAt(i, styleColor.set(colors[Math.floor(sr() * colors.length)]));
+    mesh.visible = false;
+    floorStyles[name] = mesh;
+    scene.add(mesh);
+  }
+  let activeStyle: FloorStyle = 'marble';
+  let prevStyle: FloorStyle | null = null;
+  let switchAt = 0;
+  let now = 0;
+  const WAVE = 0.9;
+  const FLIP = 0.45;
+
   const m4 = new THREE.Matrix4();
   const pos = new THREE.Vector3();
   const quat = new THREE.Quaternion();
   const one = new THREE.Vector3(1, 1, 1);
+  const lifted = new THREE.Vector3();
+  const scl = new THREE.Vector3();
+
+  function writeFloor(i: number) {
+    const active = floorStyles[activeStyle];
+    if (!prevStyle) {
+      m4.compose(pos, quat, one);
+      active.setMatrixAt(i, m4);
+      return;
+    }
+    // New tile rises into place as the old one sinks away.
+    const k = easeOut(clamp01((now - switchAt - floor.delay[i] * WAVE) / FLIP));
+    lifted.copy(pos).y += (1 - k) * 0.35;
+    m4.compose(lifted, quat, scl.setScalar(Math.max(k, 1e-4)));
+    active.setMatrixAt(i, m4);
+    m4.compose(pos, quat, scl.setScalar(Math.max(1 - k, 1e-4)));
+    floorStyles[prevStyle].setMatrixAt(i, m4);
+  }
 
   function update(p: number, time: number) {
+    now = time;
+    if (prevStyle && time - switchAt > WAVE + FLIP) {
+      floorStyles[prevStyle].visible = false;
+      prevStyle = null;
+    }
+
+    // Showpiece slab: turns slowly, then shrinks away as the tiles take over.
+    const sk = 1 - smooth(clamp01(p / 0.07));
+    slab.visible = sk > 0.001;
+    slab.scale.setScalar(Math.max(sk, 1e-4));
+    slab.position.set(0, 2.55 + Math.sin(time * 0.7) * 0.05 + (1 - sk) * 1.5, 5.6);
+    slab.rotation.set(1.05 + Math.sin(time * 0.5) * 0.08, time * 0.22, Math.sin(time * 0.35) * 0.06);
+
     for (const g of groups) {
       const [a, b] = g.range;
       const local = (p - a) / (b - a);
@@ -388,12 +455,24 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
           pos.y += Math.sin(time * 0.8 + g.phase[i]) * drift;
           pos.x += Math.cos(time * 0.6 + g.phase[i]) * drift * 0.5;
         }
-        m4.compose(pos, quat, one);
-        g.mesh.setMatrixAt(i, m4);
+        if (g === floor) {
+          writeFloor(i);
+        } else {
+          m4.compose(pos, quat, one);
+          g.mesh.setMatrixAt(i, m4);
+        }
       }
-      g.mesh.instanceMatrix.needsUpdate = true;
-      // Wall tiles stay hidden until their chapter so the hero stays clean.
-      g.mesh.visible = g.float || local > -0.05;
+      if (g === floor) {
+        for (const name of Object.keys(floorStyles) as FloorStyle[]) {
+          const mesh = floorStyles[name];
+          mesh.visible = name === activeStyle || name === prevStyle;
+          if (mesh.visible) mesh.instanceMatrix.needsUpdate = true;
+        }
+      } else {
+        g.mesh.instanceMatrix.needsUpdate = true;
+        // Wall tiles stay hidden until their chapter so the hero stays clean.
+        g.mesh.visible = local > -0.05;
+      }
     }
     for (const [m, g] of bases) {
       const local = (p - g.range[0]) / (g.range[1] - g.range[0]);
@@ -479,6 +558,14 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   render();
 
   return {
+    setFloorStyle(name: FloorStyle) {
+      if (name === activeStyle || !floorStyles[name]) return;
+      // A switch mid-wave snaps the old style away so only two meshes ever show.
+      if (prevStyle) floorStyles[prevStyle].visible = false;
+      prevStyle = activeStyle;
+      activeStyle = name;
+      switchAt = now;
+    },
     start() {
       if (running) return;
       running = true;
