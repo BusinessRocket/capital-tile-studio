@@ -7,7 +7,8 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { glazeTexture, marbleTexture, perTileUv } from './textures';
+import { Reflector } from 'three/addons/objects/Reflector.js';
+import { glazeTexture, marbleTexture, perTileUv, rippleNormalTexture, streakGlazeTexture } from './textures';
 
 type Placement = { pos: THREE.Vector3; quat: THREE.Quaternion };
 export type FloorStyle = 'marble' | 'sage' | 'terracotta' | 'charcoal';
@@ -23,8 +24,9 @@ interface TileGroup {
 }
 
 const ROOM = { halfW: 5, back: -4, front: 4, height: 5 };
-const BG = new THREE.Color('#f7f5f1');
-const SUN_DIR = new THREE.Vector3(6, 9, 5).normalize();
+const BG = new THREE.Color('#f6f1e9');
+// Low golden-hour sun so light streaks run long across the floor and up the walls.
+const SUN_DIR = new THREE.Vector3(7, 4.6, 4.2).normalize();
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -117,7 +119,7 @@ function makeGroup(opts: {
 /** A soft studio "room" with a bright window, used only to light reflections. */
 function environmentScene() {
   const env = new THREE.Scene();
-  const shell = new THREE.Mesh(new THREE.BoxGeometry(24, 12, 24), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.55, 0.53, 0.5), side: THREE.BackSide }));
+  const shell = new THREE.Mesh(new THREE.BoxGeometry(24, 12, 24), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.5, 0.45, 0.39), side: THREE.BackSide }));
   env.add(shell);
   const glow = (w: number, h: number, c: THREE.Color, pos: THREE.Vector3, look: THREE.Vector3) => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: c, side: THREE.DoubleSide }));
@@ -125,10 +127,12 @@ function environmentScene() {
     m.lookAt(look);
     env.add(m);
   };
-  // Big daylight window on the sun side, a soft ceiling panel and a warm floor bounce.
-  glow(9, 6, new THREE.Color(7, 6.6, 6), new THREE.Vector3(11.5, 4, 3), new THREE.Vector3(0, 2, 0));
-  glow(14, 14, new THREE.Color(1.6, 1.6, 1.6), new THREE.Vector3(0, 5.8, 0), new THREE.Vector3(0, 0, 0));
-  glow(14, 14, new THREE.Color(0.75, 0.68, 0.58), new THREE.Vector3(0, -5.8, 0), new THREE.Vector3(0, 0, 0));
+  // Tall golden-hour windows: these are what glossy glazes reflect as bright streaks.
+  glow(5, 9, new THREE.Color(10, 8, 5.6), new THREE.Vector3(11.8, 3.5, 2.5), new THREE.Vector3(0, 2, 0));
+  glow(3, 8, new THREE.Color(7, 5.8, 4.2), new THREE.Vector3(11.8, 3.5, -4), new THREE.Vector3(0, 2, 0));
+  glow(12, 5, new THREE.Color(2.4, 2.1, 1.7), new THREE.Vector3(0, 3, 11.8), new THREE.Vector3(0, 2, 0));
+  glow(14, 14, new THREE.Color(1.2, 1.12, 1.02), new THREE.Vector3(0, 5.8, 0), new THREE.Vector3(0, 0, 0));
+  glow(14, 14, new THREE.Color(0.8, 0.68, 0.52), new THREE.Vector3(0, -5.8, 0), new THREE.Vector3(0, 0, 0));
   return env;
 }
 
@@ -142,24 +146,137 @@ function windowCookie() {
     m.castShadow = true;
     frame.add(m);
   };
-  const W = 3.4;
-  const H = 2.8;
-  const b = 0.12;
+  // Tall, slim black-framed window: two narrow panes make two crisp light shafts.
+  const W = 1.7;
+  const H = 2.2;
+  const b = 0.08;
   bar(W, b, 0, H / 2);
   bar(W, b, 0, -H / 2);
   bar(b, H, -W / 2, 0);
   bar(b, H, W / 2, 0);
-  bar(b * 0.7, H, 0, 0);
-  bar(W, b * 0.7, 0, 0);
+  bar(0.22, H, 0, 0);
+  bar(W, b * 0.7, 0, H / 5);
   // Walls around the window so light only enters through the glass.
   const wall = (w: number, h: number, x: number, y: number) => bar(w, h, x, y);
   wall(30, 12, 0, H / 2 + 6);
   wall(30, 12, 0, -H / 2 - 6);
   wall(14, H, -W / 2 - 7, 0);
   wall(14, H, W / 2 + 7, 0);
+
+  // Olive branches outside the glass: dappled leaf shadows that sway gently.
+  const leaves = new THREE.Group();
+  const lr = rng(53);
+  const leafGeo = new THREE.CircleGeometry(1, 7);
+  const count = 220;
+  const inst = new THREE.InstancedMesh(leafGeo, mat, count);
+  inst.castShadow = true;
+  const m4 = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
+  const branches = [
+    { from: [-W / 2 - 0.3, -H / 2 + 0.3], to: [0.3, 0.5] },
+    { from: [-W / 2 - 0.2, -H / 2 - 0.1], to: [0.1, -0.3] },
+    { from: [-W / 2 - 0.4, 0.2], to: [-0.2, H / 2 - 0.1] },
+  ];
+  for (let i = 0; i < count; i++) {
+    const br = branches[i % branches.length];
+    const k = lr();
+    const bend = Math.sin(k * Math.PI) * 0.35;
+    const x = br.from[0] + (br.to[0] - br.from[0]) * k + (lr() - 0.5) * 0.35;
+    const y = br.from[1] + (br.to[1] - br.from[1]) * k + bend + (lr() - 0.5) * 0.35;
+    q.setFromAxisAngle(new THREE.Vector3(0, 0, 1), lr() * Math.PI * 2);
+    m4.compose(new THREE.Vector3(x, y, 0.3 + lr() * 0.3), q, new THREE.Vector3(0.09, 0.024, 1));
+    inst.setMatrixAt(i, m4);
+  }
+  leaves.add(inst);
+  frame.add(leaves);
+  frame.userData.leaves = leaves;
+
   frame.position.copy(SUN_DIR.clone().multiplyScalar(7.5)).add(new THREE.Vector3(0.6, 0, -0.4));
   frame.lookAt(frame.position.clone().add(SUN_DIR));
   return frame;
+}
+
+/** Turned timber stool and a potted olive tree, for a lived-in finish. */
+function makeDecor(shadows: boolean) {
+  const group = new THREE.Group();
+  // Turned timber stool: wide seat, waisted body.
+  const wood = new THREE.MeshPhysicalMaterial({ color: '#a2774c', roughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.35 });
+  const stool = new THREE.Mesh(
+    new THREE.LatheGeometry(
+      [
+        [0, 0],
+        [0.17, 0],
+        [0.15, 0.08],
+        [0.11, 0.22],
+        [0.15, 0.38],
+        [0.2, 0.44],
+        [0.2, 0.47],
+        [0, 0.47],
+      ].map(([x, y]) => new THREE.Vector2(x, y)),
+      40,
+    ),
+    wood,
+  );
+  stool.position.set(0.5, 0, -2.6);
+  group.add(stool);
+  const POT = new THREE.Vector3(-0.55, 0, -3.25);
+
+  const pot = new THREE.Mesh(
+    new THREE.LatheGeometry(
+      [
+        [0, 0],
+        [0.16, 0],
+        [0.25, 0.14],
+        [0.29, 0.36],
+        [0.24, 0.58],
+        [0.16, 0.66],
+        [0.17, 0.7],
+        [0, 0.7],
+      ].map(([x, y]) => new THREE.Vector2(x, y)),
+      40,
+    ),
+    new THREE.MeshStandardMaterial({ color: '#ddd1bd', roughness: 0.95 }),
+  );
+  pot.position.copy(POT);
+  group.add(pot);
+
+  const bark = new THREE.MeshStandardMaterial({ color: '#5b4a3a', roughness: 0.9 });
+  const tips: THREE.Vector3[] = [];
+  const tr = rng(29);
+  for (let i = 0; i < 4; i++) {
+    const len = 0.8 + tr() * 0.7;
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.02, len, 6), bark);
+    const lean = new THREE.Euler((tr() - 0.5) * 0.6, 0, (tr() - 0.5) * 0.6);
+    stem.rotation.copy(lean);
+    const dir = new THREE.Vector3(0, 1, 0).applyEuler(lean);
+    stem.position.copy(POT).setY(0.66).addScaledVector(dir, len / 2);
+    tips.push(POT.clone().setY(0.66).addScaledVector(dir, len));
+    group.add(stem);
+  }
+  const leafCount = 360;
+  const leaf = new THREE.InstancedMesh(
+    new THREE.CircleGeometry(1, 6),
+    new THREE.MeshStandardMaterial({ color: '#6b7650', roughness: 0.6, side: THREE.DoubleSide }),
+    leafCount,
+  );
+  const lm = new THREE.Matrix4();
+  const tint = new THREE.Color();
+  for (let i = 0; i < leafCount; i++) {
+    const tip = tips[i % tips.length];
+    const p = tip.clone().add(new THREE.Vector3((tr() - 0.5) * 0.55, (tr() - 0.6) * 0.6, (tr() - 0.5) * 0.55));
+    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(tr() * Math.PI, tr() * Math.PI, tr() * Math.PI));
+    lm.compose(p, q, new THREE.Vector3(0.07, 0.018, 1));
+    leaf.setMatrixAt(i, lm);
+    leaf.setColorAt(i, tint.set(tr() > 0.5 ? '#6b7650' : '#8a9470'));
+  }
+  group.add(leaf);
+  group.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) {
+      o.castShadow = shadows;
+      o.receiveShadow = shadows;
+    }
+  });
+  return group;
 }
 
 function makeBath(shadows: boolean) {
@@ -186,7 +303,8 @@ function makeBath(shadows: boolean) {
   shell.receiveShadow = shadows;
   group.add(shell);
 
-  const black = new THREE.MeshStandardMaterial({ color: '#1a1a1a', roughness: 0.35, metalness: 0.6 });
+  // Brushed bronze tapware.
+  const black = new THREE.MeshStandardMaterial({ color: '#7a5434', roughness: 0.28, metalness: 1 });
   const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.92, 20), black);
   pipe.position.set(1.06, 0.46, 0);
   // Half-torus arcing from the top of the pipe out over the rim.
@@ -228,7 +346,7 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: !useAO && !small, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, small ? 1.5 : 1.75));
   renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.toneMappingExposure = 0.9;
+  renderer.toneMappingExposure = 0.95;
   renderer.shadowMap.enabled = shadows;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -238,13 +356,13 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
 
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(environmentScene(), 0.035).texture;
-  scene.environmentIntensity = 0.95;
+  scene.environmentIntensity = 1.0;
   pmrem.dispose();
 
   const camera = new THREE.PerspectiveCamera(small ? 55 : 42, 1, 0.1, 60);
 
-  scene.add(new THREE.HemisphereLight('#f6f7ff', '#cbbfae', 1.0));
-  const sun = new THREE.DirectionalLight('#ffe9cf', 3.6);
+  scene.add(new THREE.HemisphereLight('#fff1de', '#cdb89a', 0.75));
+  const sun = new THREE.DirectionalLight('#ffcf96', 4.6);
   sun.position.copy(SUN_DIR.clone().multiplyScalar(16));
   sun.target.position.set(0, 0, 0);
   sun.castShadow = shadows;
@@ -253,10 +371,11 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.02;
   sun.shadow.radius = 4;
-  scene.add(sun, sun.target, windowCookie());
+  const cookie = windowCookie();
+  scene.add(sun, sun.target, cookie);
 
   // Soft fill from the room side so shadows are not pitch black.
-  const fill = new THREE.DirectionalLight('#eef1ff', 0.9);
+  const fill = new THREE.DirectionalLight('#e9eeff', 0.6);
   fill.position.set(-6, 5, 8);
   scene.add(fill);
 
@@ -265,9 +384,9 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   const floorBase = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.halfW * 2, ROOM.front - ROOM.back), groutMat('#d8d2c8'));
   floorBase.rotation.x = -Math.PI / 2;
   floorBase.position.set(0, 0, (ROOM.front + ROOM.back) / 2);
-  const backBase = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.halfW * 2, ROOM.height), groutMat('#dcd7ce'));
+  const backBase = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.halfW * 2, ROOM.height), groutMat('#e6dccb'));
   backBase.position.set(0, ROOM.height / 2, ROOM.back);
-  const sideBase = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.front - ROOM.back, ROOM.height), groutMat('#d9dcd2'));
+  const sideBase = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.front - ROOM.back, ROOM.height), groutMat('#d8d3c2'));
   sideBase.rotation.y = Math.PI / 2;
   sideBase.position.set(-ROOM.halfW, ROOM.height / 2, (ROOM.front + ROOM.back) / 2);
   [floorBase, backBase, sideBase].forEach((m) => (m.receiveShadow = shadows));
@@ -278,7 +397,7 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
 
   // Floor: polished marble herringbone.
   const marble = marbleTexture(small ? 384 : 512);
-  const floorMat = new THREE.MeshPhysicalMaterial({ map: marble, roughness: 0.09, clearcoat: 1, clearcoatRoughness: 0.06 });
+  const floorMat = new THREE.MeshPhysicalMaterial({ map: marble, roughness: 0.06, clearcoat: 1, clearcoatRoughness: 0.03 });
   perTileUv(floorMat, 0.55);
   const u = small ? 0.34 : 0.25;
   const floor = makeGroup({
@@ -297,9 +416,9 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
     shadows,
   });
 
-  // Back wall: gloss white subway, built from the bottom row up.
-  const sw = small ? 0.8 : 0.6;
-  const sh = sw / 2;
+  // Back wall: cream handmade-gloss subway (3:1), built from the bottom row up.
+  const sw = small ? 0.72 : 0.6;
+  const sh = sw / 3;
   const backTargets: Placement[] = [];
   for (let j = 0; j * sh < ROOM.height - sh / 2; j++) {
     const off = j % 2 ? sw / 2 : 0;
@@ -309,12 +428,22 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
       backTargets.push({ pos: new THREE.Vector3(cx, j * sh + sh / 2, ROOM.back + t / 2), quat: new THREE.Quaternion() });
     }
   }
-  const backMat = new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.025, 256, 5), roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.04 });
-  perTileUv(backMat, 0.18);
+  const ripples = rippleNormalTexture(256, 5, 2.2, 1);
+  const backMat = new THREE.MeshPhysicalMaterial({
+    map: glazeTexture(0.02, 256, 5),
+    roughness: 0.14,
+    clearcoat: 1,
+    clearcoatRoughness: 0.03,
+    normalMap: ripples,
+    normalScale: new THREE.Vector2(0.15, 0.15),
+    clearcoatNormalMap: ripples,
+    clearcoatNormalScale: new THREE.Vector2(0.55, 0.55),
+  });
+  perTileUv(backMat, 0.35);
   const back = makeGroup({
-    geometry: new RoundedBoxGeometry(sw - gap, sh - gap, t, 3, 0.014),
+    geometry: new RoundedBoxGeometry(sw - gap, sh - gap, t, 3, 0.012),
     material: backMat,
-    colors: ['#f7f6f3', '#f4f3ef', '#f9f8f6', '#f2f1ed'],
+    colors: ['#f3ebdd', '#f0e7d7', '#f5eee2', '#eee4d3'],
     targets: backTargets,
     startFor: (tg, r) => ({
       pos: new THREE.Vector3(tg.pos.x + (r() - 0.5) * 1.5, tg.pos.y + 3 + r() * 2, tg.pos.z + 2.5 + r() * 2),
@@ -327,23 +456,33 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   });
 
   // Side wall: handmade-look sage vertical stack, swept in from front to back.
-  const fw = small ? 0.3 : 0.2;
-  const fh = 0.6;
+  const fw = small ? 0.3 : 0.22;
+  const fh = fw * 2;
   const wr = rng(71);
   const sideTargets: Placement[] = [];
   for (let z = ROOM.back; z + fw <= ROOM.front + 0.001; z += fw)
     for (let y = 0; y + fh <= ROOM.height + 0.001; y += fh)
       sideTargets.push({
         pos: new THREE.Vector3(-ROOM.halfW + t / 2, y + fh / 2, z + fw / 2),
-        // A hair off-flat, like real glazed handmade tiles catching the light.
-        quat: new THREE.Quaternion().setFromEuler(new THREE.Euler((wr() - 0.5) * 0.03, 0, (wr() - 0.5) * 0.03)),
+        // Slightly off-flat, like real handmade zellige catching the light.
+        quat: new THREE.Quaternion().setFromEuler(new THREE.Euler((wr() - 0.5) * 0.07, (wr() - 0.5) * 0.04, (wr() - 0.5) * 0.07)),
       });
-  const sideMat = new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.07, 256, 9), roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.1 });
-  perTileUv(sideMat, 0.22);
+  const zelligeNormals = rippleNormalTexture(256, 21, 2.6, 2.2);
+  const sideMat = new THREE.MeshPhysicalMaterial({
+    map: streakGlazeTexture(0.09, 256, 9),
+    roughness: 0.1,
+    clearcoat: 1,
+    clearcoatRoughness: 0.02,
+    normalMap: zelligeNormals,
+    normalScale: new THREE.Vector2(0.4, 0.4),
+    clearcoatNormalMap: zelligeNormals,
+    clearcoatNormalScale: new THREE.Vector2(0.8, 0.8),
+  });
+  perTileUv(sideMat, 0.28);
   const side = makeGroup({
-    geometry: new RoundedBoxGeometry(t, fh - gap, fw - gap, 2, 0.01),
+    geometry: new RoundedBoxGeometry(t, fh - gap, fw - gap, 3, 0.012),
     material: sideMat,
-    colors: ['#9fac94', '#94a189', '#a8b39e', '#8d9a83', '#a1ad97', '#b0baa6'],
+    colors: ['#8c987b', '#7f8c70', '#97a286', '#76836a', '#a0aa8e', '#88947a', '#717e64', '#93a083'],
     targets: sideTargets,
     startFor: (tg, r) => ({
       pos: new THREE.Vector3(tg.pos.x + 2 + r() * 2.5, tg.pos.y + (r() - 0.3) * 2, tg.pos.z + (r() - 0.5) * 1.5),
@@ -366,6 +505,49 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   const bath = makeBath(shadows);
   const BATH_AT = new THREE.Vector3(1.9, 0.04, -3.05);
   scene.add(bath);
+  const decor = makeDecor(shadows);
+  scene.add(decor);
+
+  // Polished floor: a soft mirror layer just above the tiles (desktop only).
+  let mirror: Reflector | null = null;
+  let renderMirror: ((r: THREE.WebGLRenderer, s: THREE.Scene, c: THREE.Camera) => void) | null = null;
+  if (useAO) {
+    mirror = new Reflector(new THREE.PlaneGeometry(ROOM.halfW * 2, ROOM.front - ROOM.back), {
+      textureWidth: Math.round(window.innerWidth * 0.5),
+      textureHeight: Math.round(window.innerHeight * 0.5),
+      clipBias: 0.003,
+      color: 0xffffff,
+      multisample: 0,
+      shader: {
+        name: 'SoftMirror',
+        uniforms: { color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null }, opacity: { value: 0 } },
+        vertexShader: Reflector.ReflectorShader.vertexShader,
+        fragmentShader: /* glsl */ `
+          uniform vec3 color;
+          uniform sampler2D tDiffuse;
+          uniform float opacity;
+          varying vec4 vUv;
+          #include <logdepthbuf_pars_fragment>
+          void main() {
+            #include <logdepthbuf_fragment>
+            vec4 base = texture2DProj(tDiffuse, vUv);
+            // Alpha comes from the reflection itself, so empty sky reflects nothing.
+            gl_FragColor = vec4(base.rgb * color, base.a * opacity);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
+          }`,
+      },
+    });
+    const mm = mirror.material as THREE.ShaderMaterial;
+    mm.transparent = true;
+    mm.depthWrite = false;
+    mirror.rotation.x = -Math.PI / 2;
+    mirror.position.set(0, t + 0.0015, (ROOM.front + ROOM.back) / 2);
+    // Render the reflection once per frame ourselves, not inside every post-processing pass.
+    renderMirror = mirror.onBeforeRender.bind(mirror) as typeof renderMirror;
+    mirror.onBeforeRender = () => {};
+    scene.add(mirror);
+  }
 
   // Hero showpiece: one large polished slab turning in the light before the room builds.
   const slab = new THREE.Mesh(
@@ -485,6 +667,21 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
     const bk = clamp01((p - 0.82) / 0.12);
     bath.visible = bk > 0;
     bath.position.set(BATH_AT.x, BATH_AT.y + (1 - easeOutBack(bk)) * 3, BATH_AT.z);
+    decor.visible = bk > 0;
+    decor.position.y = (1 - easeOutBack(bk)) * 3;
+
+    // The floor turns mirror-polished once it is fully laid.
+    if (mirror) {
+      const fl = (p - floor.range[0]) / (floor.range[1] - floor.range[0]);
+      const o = clamp01((fl - 1) * 4) * 0.34;
+      (mirror.material as THREE.ShaderMaterial).uniforms.opacity.value = o;
+      mirror.visible = o > 0.001;
+    }
+
+    // Olive leaves outside the window sway, so their shadows drift.
+    const leaves = cookie.userData.leaves as THREE.Group;
+    leaves.rotation.z = Math.sin(time * 0.7) * 0.025 + Math.sin(time * 1.9) * 0.008;
+    leaves.position.x = Math.sin(time * 0.5) * 0.04;
   }
 
   let composer: EffectComposer | null = null;
@@ -523,7 +720,24 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   ro.observe(canvas);
   resize();
 
-  const render = () => (composer ? composer.render() : renderer.render(scene, camera));
+  const render = () => {
+    if (mirror?.visible && renderMirror) {
+      camera.updateMatrixWorld();
+      // Reflect objects only: transparent background, no fog.
+      const bg = scene.background;
+      const fog = scene.fog;
+      const clear = renderer.getClearAlpha();
+      scene.background = null;
+      scene.fog = null;
+      renderer.setClearAlpha(0);
+      renderMirror(renderer, scene, camera);
+      scene.background = bg;
+      scene.fog = fog;
+      renderer.setClearAlpha(clear);
+    }
+    if (composer) composer.render();
+    else renderer.render(scene, camera);
+  };
 
   let smoothP = getProgress();
   let raf = 0;
@@ -548,7 +762,7 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
     place(smoothP);
     // Light warms slightly toward late afternoon for the final reveal.
     const warm = smooth(clamp01((smoothP - 0.75) / 0.25));
-    sun.color.setRGB(1, 0.915 - warm * 0.06, 0.81 - warm * 0.12);
+    sun.color.setRGB(1, 0.84 - warm * 0.05, 0.62 - warm * 0.08);
     render();
   }
 

@@ -100,19 +100,85 @@ export function glazeTexture(strength = 0.06, size = 256, seed = 3) {
 }
 
 /**
- * Lets each instance sample a different window of a shared texture, so no two
- * tiles look the same. Expects an instanced `tileUv` attribute: (offsetX, offsetY, rotation).
+ * Normal map for hand-glazed tiles: soft, low-frequency ripples that break
+ * reflections into streaks. `stretch` > 1 elongates ripples vertically.
+ */
+export function rippleNormalTexture(size = 256, seed = 5, strength = 2.5, stretch = 1) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d')!;
+  const img = ctx.createImageData(size, size);
+  const fbm = makeNoise(seed);
+  const h = new Float32Array(size * size);
+  for (let y = 0; y < size; y++)
+    for (let x = 0; x < size; x++) h[y * size + x] = fbm((x / size) * 3, (y / size) * (3 / stretch), 4);
+  const at = (x: number, y: number) => h[Math.min(size - 1, Math.max(0, y)) * size + Math.min(size - 1, Math.max(0, x))];
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = (at(x + 1, y) - at(x - 1, y)) * strength * size * 0.05;
+      const dy = (at(x, y + 1) - at(x, y - 1)) * strength * size * 0.05;
+      const len = Math.hypot(dx, dy, 1);
+      const i = (y * size + x) * 4;
+      img.data[i] = ((-dx / len) * 0.5 + 0.5) * 255;
+      img.data[i + 1] = ((dy / len) * 0.5 + 0.5) * 255;
+      img.data[i + 2] = ((1 / len) * 0.5 + 0.5) * 255;
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.NoColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/** Glaze with vertical pooling streaks, as on handmade zellige. */
+export function streakGlazeTexture(strength = 0.14, size = 256, seed = 9) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d')!;
+  const img = ctx.createImageData(size, size);
+  const fbm = makeNoise(seed);
+  const fbm2 = makeNoise(seed + 31);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const nx = x / size;
+      const ny = y / size;
+      const streak = fbm(nx * 7, ny * 1.2, 4);
+      const cloud = fbm2(nx * 2.5, ny * 2.5, 3);
+      const v = Math.round(255 * (1 - strength + (streak * 0.7 + cloud * 0.5) * strength * 2));
+      const i = (y * size + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = Math.max(0, Math.min(255, v));
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return toTexture(c);
+}
+
+/**
+ * Lets each instance sample a different window of shared textures (colour and
+ * normal maps), so no two tiles look the same. Expects an instanced `tileUv`
+ * attribute: (offsetX, offsetY, rotation).
  */
 export function perTileUv(material: THREE.Material, scale: number) {
+  const remap = (v: string) => `${v} = tileRot * (${v} - 0.5) * ${scale.toFixed(3)} + 0.5 + tileUv.xy;`;
   material.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nattribute vec3 tileUv;')
       .replace(
         '#include <uv_vertex>',
         `#include <uv_vertex>
+        mat2 tileRot = mat2(cos(tileUv.z), -sin(tileUv.z), sin(tileUv.z), cos(tileUv.z));
         #ifdef USE_MAP
-          float cr = cos(tileUv.z), sr = sin(tileUv.z);
-          vMapUv = mat2(cr, -sr, sr, cr) * (vMapUv - 0.5) * ${scale.toFixed(3)} + 0.5 + tileUv.xy;
+          ${remap('vMapUv')}
+        #endif
+        #ifdef USE_NORMALMAP
+          ${remap('vNormalMapUv')}
+        #endif
+        #ifdef USE_CLEARCOAT_NORMALMAP
+          ${remap('vClearcoatNormalMapUv')}
         #endif`,
       );
   };
