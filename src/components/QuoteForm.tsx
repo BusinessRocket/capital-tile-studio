@@ -90,7 +90,16 @@ export default function QuoteForm({ email, phoneHref, businessName }: Props) {
   const errCount = Object.keys(errors).length;
 
   return (
-    <form ref={formRef} onSubmit={submit('email')} noValidate className="space-y-6">
+    // Without JavaScript (or before hydration) the browser still opens an email with the fields filled in.
+    <form
+      ref={formRef}
+      onSubmit={submit('email')}
+      action={`mailto:${email}?subject=${encodeURIComponent('Quote request')}`}
+      method="post"
+      encType="text/plain"
+      noValidate
+      className="space-y-6"
+    >
       {errCount > 0 && (
         <div ref={summaryRef} tabIndex={-1} role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
           <p className="font-semibold">Please check {errCount === 1 ? 'one thing' : `${errCount} things`}:</p>

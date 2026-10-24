@@ -136,7 +136,58 @@ function environmentScene() {
   return env;
 }
 
-/** Invisible window frame that throws mullion shadows into the room. */
+// Tall windows in the sun-side wall: [centre z, width], sill and head heights.
+const WINDOWS: [number, number][] = [
+  [-0.9, 1.4],
+  [1.5, 1.4],
+];
+const SILL = 0.45;
+const HEAD = 3.95;
+
+/**
+ * The plastered sun-side wall with two tall black-framed windows. Sunlight
+ * shafts into the room through these real openings.
+ */
+function makeWindowWall(shadows: boolean) {
+  const group = new THREE.Group();
+  const plaster = new THREE.MeshStandardMaterial({ color: '#ece6dc', roughness: 0.92 });
+  const metal = new THREE.MeshStandardMaterial({ color: '#1c1c1e', roughness: 0.45, metalness: 0.6 });
+  const T = 0.16;
+  const x = ROOM.halfW + T / 2;
+  const box = (z0: number, z1: number, y0: number, y1: number, mat: THREE.Material, depth = T, dx = 0) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(depth, y1 - y0, z1 - z0), mat);
+    m.position.set(x + dx, (y0 + y1) / 2, (z0 + z1) / 2);
+    m.castShadow = m.receiveShadow = shadows;
+    group.add(m);
+  };
+  // Solid wall between and around the openings.
+  let z = ROOM.back;
+  for (const [cz, w] of WINDOWS) {
+    box(z, cz - w / 2, 0, ROOM.height, plaster);
+    box(cz - w / 2, cz + w / 2, 0, SILL, plaster);
+    box(cz - w / 2, cz + w / 2, HEAD, ROOM.height, plaster);
+    z = cz + w / 2;
+  }
+  box(z, ROOM.front, 0, ROOM.height, plaster);
+  // Slim black steel frames: perimeter, centre mullion and a high transom.
+  const f = 0.05;
+  for (const [cz, w] of WINDOWS) {
+    const z0 = cz - w / 2;
+    const z1 = cz + w / 2;
+    box(z0, z1, SILL, SILL + f, metal, 0.07);
+    box(z0, z1, HEAD - f, HEAD, metal, 0.07);
+    box(z0, z0 + f, SILL, HEAD, metal, 0.07);
+    box(z1 - f, z1, SILL, HEAD, metal, 0.07);
+    box(cz - f / 2, cz + f / 2, SILL, HEAD, metal, 0.07);
+    box(z0, z1, HEAD - 0.85, HEAD - 0.85 + f, metal, 0.07);
+  }
+  return group;
+}
+
+/**
+ * Invisible light blocker beyond the window wall: stops sun reaching the room
+ * over the top or through the open front, so light only enters by the windows.
+ */
 function windowCookie() {
   const frame = new THREE.Group();
   const mat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
@@ -146,22 +197,13 @@ function windowCookie() {
     m.castShadow = true;
     frame.add(m);
   };
-  // Tall, slim black-framed window: two narrow panes make two crisp light shafts.
-  const W = 1.7;
-  const H = 2.2;
-  const b = 0.08;
-  bar(W, b, 0, H / 2);
-  bar(W, b, 0, -H / 2);
-  bar(b, H, -W / 2, 0);
-  bar(b, H, W / 2, 0);
-  bar(0.22, H, 0, 0);
-  bar(W, b * 0.7, 0, H / 5);
-  // Walls around the window so light only enters through the glass.
-  const wall = (w: number, h: number, x: number, y: number) => bar(w, h, x, y);
-  wall(30, 12, 0, H / 2 + 6);
-  wall(30, 12, 0, -H / 2 - 6);
-  wall(14, H, -W / 2 - 7, 0);
-  wall(14, H, W / 2 + 7, 0);
+  // Generous opening: the real window wall defines the shafts' exact shape.
+  const W = 6;
+  const H = 5;
+  bar(40, 14, 0, H / 2 + 7);
+  bar(40, 14, 0, -H / 2 - 7);
+  bar(16, H, -W / 2 - 8, 0);
+  bar(16, H, W / 2 + 8, 0);
 
   // Olive branches outside the glass: dappled leaf shadows that sway gently.
   const leaves = new THREE.Group();
@@ -173,9 +215,9 @@ function windowCookie() {
   const m4 = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const branches = [
-    { from: [-W / 2 - 0.3, -H / 2 + 0.3], to: [0.3, 0.5] },
-    { from: [-W / 2 - 0.2, -H / 2 - 0.1], to: [0.1, -0.3] },
-    { from: [-W / 2 - 0.4, 0.2], to: [-0.2, H / 2 - 0.1] },
+    { from: [-W / 2, -0.6], to: [0.4, 0.5] },
+    { from: [-W / 2 + 0.3, -1.4], to: [0.6, -0.6] },
+    { from: [-W / 2 - 0.2, 0.6], to: [-0.4, 1.6] },
   ];
   for (let i = 0; i < count; i++) {
     const br = branches[i % branches.length];
@@ -191,7 +233,9 @@ function windowCookie() {
   frame.add(leaves);
   frame.userData.leaves = leaves;
 
-  frame.position.copy(SUN_DIR.clone().multiplyScalar(7.5)).add(new THREE.Vector3(0.6, 0, -0.4));
+  // Sits out along the sun ray through the middle of the windows.
+  const through = new THREE.Vector3(ROOM.halfW, (SILL + HEAD) / 2, (WINDOWS[0][0] + WINDOWS[1][0]) / 2);
+  frame.position.copy(through).addScaledVector(SUN_DIR, 4);
   frame.lookAt(frame.position.clone().add(SUN_DIR));
   return frame;
 }
@@ -372,7 +416,8 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   sun.shadow.normalBias = 0.02;
   sun.shadow.radius = 4;
   const cookie = windowCookie();
-  scene.add(sun, sun.target, cookie);
+  const windowWall = makeWindowWall(shadows);
+  scene.add(sun, sun.target, cookie, windowWall);
 
   // Soft fill from the room side so shadows are not pitch black.
   const fill = new THREE.DirectionalLight('#e9eeff', 0.6);
@@ -396,9 +441,9 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   const t = 0.04;
 
   // Floor: polished marble herringbone.
-  const marble = marbleTexture(small ? 384 : 512);
+  const marble = marbleTexture(small ? 512 : 768);
   const floorMat = new THREE.MeshPhysicalMaterial({ map: marble, roughness: 0.06, clearcoat: 1, clearcoatRoughness: 0.03 });
-  perTileUv(floorMat, 0.55);
+  perTileUv(floorMat, 0.42);
   const u = small ? 0.34 : 0.25;
   const floor = makeGroup({
     geometry: new RoundedBoxGeometry(2 * u - gap * 0.6, t, u - gap * 0.6, 2, 0.008),
@@ -510,7 +555,8 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
 
   // Polished floor: a soft mirror layer just above the tiles (desktop only).
   let mirror: Reflector | null = null;
-  let renderMirror: ((r: THREE.WebGLRenderer, s: THREE.Scene, c: THREE.Camera) => void) | null = null;
+  type MirrorRender = (r: THREE.WebGLRenderer, s: THREE.Scene, c: THREE.Camera) => void;
+  let renderMirror: MirrorRender | null = null;
   if (useAO) {
     mirror = new Reflector(new THREE.PlaneGeometry(ROOM.halfW * 2, ROOM.front - ROOM.back), {
       textureWidth: Math.round(window.innerWidth * 0.5),
@@ -521,7 +567,8 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
       shader: {
         name: 'SoftMirror',
         uniforms: { color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null }, opacity: { value: 0 } },
-        vertexShader: Reflector.ReflectorShader.vertexShader,
+        // Present at runtime but missing from three's type definitions.
+        vertexShader: (Reflector as unknown as { ReflectorShader: { vertexShader: string } }).ReflectorShader.vertexShader,
         fragmentShader: /* glsl */ `
           uniform vec3 color;
           uniform sampler2D tDiffuse;
@@ -544,7 +591,8 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
     mirror.rotation.x = -Math.PI / 2;
     mirror.position.set(0, t + 0.0015, (ROOM.front + ROOM.back) / 2);
     // Render the reflection once per frame ourselves, not inside every post-processing pass.
-    renderMirror = mirror.onBeforeRender.bind(mirror) as typeof renderMirror;
+    // Reflector only uses the first three onBeforeRender arguments.
+    renderMirror = mirror.onBeforeRender.bind(mirror) as unknown as MirrorRender;
     mirror.onBeforeRender = () => {};
     scene.add(mirror);
   }
@@ -561,10 +609,26 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   // re-tiles the floor in a wave from the centre.
   const floorStyles: Record<FloorStyle, THREE.InstancedMesh> = { marble: floor.mesh } as Record<FloorStyle, THREE.InstancedMesh>;
   const styleDefs: [FloorStyle, THREE.MeshPhysicalMaterial, string[]][] = [
-    ['sage', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.07, 256, 9), roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.1 }), ['#9fac94', '#94a189', '#a8b39e', '#8d9a83', '#a1ad97']],
-    ['terracotta', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.1, 256, 13), roughness: 0.6, clearcoat: 0.15, clearcoatRoughness: 0.5 }), ['#c4714d', '#ba6744', '#cc7b57', '#b3613e', '#c06c48']],
-    ['charcoal', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.05, 256, 17), roughness: 0.32, clearcoat: 0.5, clearcoatRoughness: 0.25 }), ['#3d3d40', '#363639', '#434347', '#313134']],
+    // Handmade glazed: glossy with imperfect, rippled reflections.
+    [
+      'sage',
+      new THREE.MeshPhysicalMaterial({
+        map: streakGlazeTexture(0.08, 256, 31),
+        roughness: 0.12,
+        clearcoat: 1,
+        clearcoatRoughness: 0.04,
+        clearcoatNormalMap: rippleNormalTexture(256, 33, 2.4, 1.4),
+        clearcoatNormalScale: new THREE.Vector2(0.7, 0.7),
+      }),
+      ['#8c987b', '#7f8c70', '#97a286', '#76836a', '#a0aa8e'],
+    ],
+    // Unglazed terracotta: matte clay with restrained, diffuse highlights.
+    ['terracotta', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.12, 256, 13), roughness: 0.82, clearcoat: 0 }), ['#c4714d', '#ba6744', '#cc7b57', '#b3613e', '#c06c48']],
+    // Honed porcelain: soft satin sheen, no mirror.
+    ['charcoal', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.04, 256, 17), roughness: 0.46, clearcoat: 0.12, clearcoatRoughness: 0.55 }), ['#3d3d40', '#38383b', '#434347', '#333336']],
   ];
+  // How strongly each finish mirrors the room.
+  const MIRROR: Record<FloorStyle, number> = { marble: 0.34, sage: 0.2, terracotta: 0, charcoal: 0.06 };
   const sr = rng(91);
   const styleColor = new THREE.Color();
   for (const [name, mat, colors] of styleDefs) {
@@ -618,7 +682,8 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
     const sk = 1 - smooth(clamp01(p / 0.07));
     slab.visible = sk > 0.001;
     slab.scale.setScalar(Math.max(sk, 1e-4));
-    slab.position.set(0, 2.55 + Math.sin(time * 0.7) * 0.05 + (1 - sk) * 1.5, 5.6);
+    // Centred on phones (headline on top); on desktop it sits right of the editorial headline.
+    slab.position.set(small ? 0 : 1.15, (small ? 2.55 : 2.8) + Math.sin(time * 0.7) * 0.05 + (1 - sk) * 1.5, 5.6);
     slab.rotation.set(1.05 + Math.sin(time * 0.5) * 0.08, time * 0.22, Math.sin(time * 0.35) * 0.06);
 
     for (const g of groups) {
@@ -673,10 +738,19 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
     // The floor turns mirror-polished once it is fully laid.
     if (mirror) {
       const fl = (p - floor.range[0]) / (floor.range[1] - floor.range[0]);
-      const o = clamp01((fl - 1) * 4) * 0.34;
+      // Blend reflection strength across a finish switch.
+      const blend = prevStyle ? clamp01((time - switchAt) / (WAVE + FLIP)) : 1;
+      const strength = prevStyle ? MIRROR[prevStyle] + (MIRROR[activeStyle] - MIRROR[prevStyle]) * blend : MIRROR[activeStyle];
+      const o = clamp01((fl - 1) * 4) * strength;
       (mirror.material as THREE.ShaderMaterial).uniforms.opacity.value = o;
       mirror.visible = o > 0.001;
     }
+
+    // The window wall rises early in the build; once it is up, sun enters only through its windows.
+    const wk = smooth(clamp01((p - 0.04) / 0.14));
+    windowWall.visible = wk > 0;
+    windowWall.position.y = (wk - 1) * (ROOM.height + 0.2);
+    cookie.visible = wk > 0.5;
 
     // Olive leaves outside the window sway, so their shadows drift.
     const leaves = cookie.userData.leaves as THREE.Group;
@@ -752,12 +826,49 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
     camera.lookAt(camLook);
   }
 
+  // Adaptive quality: if the device can't hold ~40fps, shed the most expensive
+  // effects first (contact shadows + reflections), then render resolution.
+  let quality = 2;
+  let sampleTime = 0;
+  let sampleFrames = -45; // ignore warm-up frames (shader compiles, texture uploads)
+  let last = 0;
+  function adapt(dt: number) {
+    if (quality === 0) return;
+    sampleFrames++;
+    if (sampleFrames <= 0) return;
+    sampleTime += dt;
+    if (sampleFrames < 90) return;
+    const avg = sampleTime / sampleFrames;
+    sampleFrames = -20;
+    sampleTime = 0;
+    if (avg < 0.025) return;
+    if (quality === 2 && (composer || mirror)) {
+      composer?.dispose();
+      composer = null;
+      if (mirror) {
+        scene.remove(mirror);
+        mirror.dispose();
+        mirror = null;
+      }
+      quality = 1;
+    } else {
+      renderer.setPixelRatio(1);
+      resize();
+      quality = 0;
+    }
+  }
+
   function frame() {
     raf = requestAnimationFrame(frame);
     const time = clock.getElapsedTime();
-    smoothP += (getProgress() - smoothP) * 0.08;
-    pointer.sx += (pointer.x - pointer.sx) * 0.05;
-    pointer.sy += (pointer.y - pointer.sy) * 0.05;
+    const dt = Math.max(0, Math.min(0.1, time - last));
+    last = time;
+    adapt(dt);
+    // Frame-rate independent easing: same feel at 60Hz and 120Hz.
+    const ease = (rate: number) => 1 - Math.pow(1 - rate, dt * 60);
+    smoothP += (getProgress() - smoothP) * ease(0.08);
+    pointer.sx += (pointer.x - pointer.sx) * ease(0.05);
+    pointer.sy += (pointer.y - pointer.sy) * ease(0.05);
     update(smoothP, time);
     place(smoothP);
     // Light warms slightly toward late afternoon for the final reveal.
@@ -783,7 +894,7 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
     start() {
       if (running) return;
       running = true;
-      clock.start();
+      // The clock keeps running while paused; frame() clamps the resulting time step.
       frame();
     },
     stop() {

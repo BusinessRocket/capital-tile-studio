@@ -43,7 +43,8 @@ function toTexture(canvas: HTMLCanvasElement) {
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = 4;
+  // Sharp at grazing angles, so floor tiles do not smear into grey with distance.
+  tex.anisotropy = 8;
   tex.generateMipmaps = true;
   return tex;
 }
@@ -56,22 +57,27 @@ export function marbleTexture(size = 512) {
   const img = ctx.createImageData(size, size);
   const fbm = makeNoise(7);
   const fbm2 = makeNoise(19);
+  const fbm3 = makeNoise(43);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const nx = x / size;
       const ny = y / size;
-      const turb = fbm(nx * 3, ny * 3, 6);
-      // Two vein systems at different angles; sharp where the sine crosses zero.
-      const v1 = Math.abs(Math.sin((nx * 1.6 + ny * 2.4) * Math.PI * 2 + turb * 9));
-      const v2 = Math.abs(Math.sin((nx * 3.1 - ny * 0.9) * Math.PI * 2 + fbm2(nx * 4, ny * 4, 5) * 7));
-      const vein = Math.min(1, Math.pow(1 - v1, 7) * 0.9 + Math.pow(1 - v2, 16) * 0.55 + Math.pow(1 - v1, 2.5) * 0.12);
-      const cloud = fbm2(nx * 6, ny * 6, 4) * 0.5 + 0.5;
-      const base = 238 + cloud * 10;
+      // Main veins: few, long and meandering, with a soft halo bleeding into the stone.
+      const turb = fbm(nx * 2, ny * 2, 5);
+      const v1 = 1 - Math.abs(Math.sin((nx * 0.9 + ny * 1.3) * Math.PI * 2 + turb * 5.5));
+      const main = Math.pow(v1, 18) * 0.45 + Math.pow(v1, 5) * 0.2 + Math.pow(v1, 2) * 0.06;
+      // Hairline veins, only in some areas so the slab never looks uniformly busy.
+      const v2 = 1 - Math.abs(Math.sin((nx * 2.6 - ny * 1.1) * Math.PI * 2 + fbm2(nx * 3.5, ny * 3.5, 5) * 6));
+      const mask = Math.max(0, fbm3(nx * 1.5, ny * 1.5, 3) + 0.05) * 2.2;
+      const hair = Math.pow(v2, 50) * 0.28 * Math.min(1, mask);
+      const vein = Math.min(1, main + hair);
+      const cloud = fbm3(nx * 3, ny * 3, 4) * 0.5 + 0.5;
+      const base = 236 + cloud * 12;
       const i = (y * size + x) * 4;
       // Cool grey veins on a warm white ground, like Carrara.
-      img.data[i] = base - 4 - vein * 120;
-      img.data[i + 1] = base - 5 - vein * 116;
-      img.data[i + 2] = base - 8 - vein * 108;
+      img.data[i] = base - 2 - vein * 96;
+      img.data[i + 1] = base - 3 - vein * 93;
+      img.data[i + 2] = base - 6 - vein * 86;
       img.data[i + 3] = 255;
     }
   }
