@@ -3,104 +3,134 @@ import Layout from '../layouts/Layout.astro';
 import PageHeader from '../components/PageHeader.astro';
 import CtaBand from '../components/CtaBand.astro';
 import Estimator from '../components/Estimator.tsx';
-import { site } from '../data/site';
+import { pricing, site } from '../data/site';
 
-const check = 'M4 10.5l4 4 8-9';
+const aud = (n: number) => `$${n.toLocaleString('en-AU')}`;
 
-// TODO (owner): confirm these inclusions, and which tile range the supply price covers.
-const options = [
-  {
-    badge: 'Labour only',
-    price: site.rates.labour,
-    title: 'You supply the tiles',
-    body: 'Already chosen your tiles? We lay them for you.',
-    points: ['Setting out and laying', 'Grouting', 'Clean-up of the tiled area'],
-    dark: false,
-  },
-  {
-    badge: 'Supply & lay',
-    price: site.rates.supplied,
-    title: 'We supply the tiles',
-    body: 'One price covers the tiles and the laying, with no running around.',
-    points: ['Tiles supplied', 'Setting out and laying', 'Grouting', 'Clean-up of the tiled area'],
-    dark: true,
-  },
-];
-
+// TODO (owner): confirm which tile range the supply & lay price covers.
 const separate = [
-  'Wall tiling, splashbacks and bathrooms',
-  'Removing old tiles and disposal',
-  'Floor levelling or screeding',
-  'Waterproofing',
-  'Mosaics and complex patterns such as herringbone',
+  'Extra-large tiles (1200 × 1200 mm and up)',
+  'Disposal of old tiles and rubble',
+  'Stone, natural marble and specialty tiles',
+  'Trims, mitred edges and step nosing',
 ];
 ---
 
 <Layout
-  title={`Floor Tiling Prices Canberra: $${site.rates.labour}/m² laid, $${site.rates.supplied}/m² supplied`}
-  description={`Clear floor tiling prices in Canberra: $${site.rates.labour} per m² labour only, or $${site.rates.supplied} per m² with tiles supplied. Estimate your floor online.`}
+  title={`Tiling Prices Canberra: from $${site.rates.labour}/m²`}
+  description={`Clear tiling prices in Canberra: standard tiles $${site.rates.labour}/m², large format $${pricing.tiles[1].labour}/m², splashbacks $${pricing.splashback.rate}/m², waterproofing, screeding and niches. Estimate your job online.`}
 >
   <PageHeader
     eyebrow="Pricing"
     title="Clear pricing. No surprises."
-    lead="Two simple prices for floor tiling, with a written quote before any work starts."
+    lead="Simple per-square-metre rates, with a written quote before any work starts."
   />
 
-  <section class="container-x pb-16 md:pb-24">
-    <div class="grid gap-5 md:grid-cols-2">
-      {
-        options.map((o, i) => (
-          <div
-            class:list={['card-lift relative flex flex-col rounded-[2rem] p-8 md:p-12', o.dark ? 'on-dark bg-ink text-white' : 'bg-mist']}
-            data-reveal={i}
-          >
-            <span
-              class:list={[
-                'inline-flex self-start rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider',
-                o.dark ? 'bg-bronze text-white' : 'bg-white text-stone',
-              ]}
-            >
-              {o.badge}
-            </span>
-            <h2 class="mt-6 text-xl font-semibold">{o.title}</h2>
-            <p class="mt-2 flex items-end gap-2">
-              <span class="text-7xl font-semibold tracking-tighter tabular-nums">${o.price}</span>
-              <span class:list={['pb-2 text-lg', o.dark ? 'text-white/70' : 'text-stone']}>per m²</span>
-            </p>
-            <p class:list={['mt-4 leading-relaxed', o.dark ? 'text-white/75' : 'text-ink-soft']}>{o.body}</p>
-            <ul class="mt-6 flex-1 space-y-2">
-              {o.points.map((p) => (
-                <li class:list={['flex items-start gap-3', o.dark ? 'text-white/85' : 'text-ink-soft']}>
-                  <svg viewBox="0 0 20 20" class:list={['mt-1 h-4 w-4 flex-none', o.dark ? 'text-bronze-light' : 'text-bronze']} fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d={check} />
-                  </svg>
-                  {p}
-                </li>
-              ))}
-            </ul>
-            <a href="/contact/#quote" class:list={['btn mt-8 self-start', o.dark ? 'btn-primary' : 'btn-dark']}>
-              Get a quote
-            </a>
-          </div>
-        ))
-      }
+  <!-- Tiling rates -->
+  <section class="container-x pb-16 md:pb-20">
+    <div class="overflow-hidden rounded-[2rem] border border-line bg-white" data-reveal>
+      <div class="flex flex-col gap-1 border-b border-line px-6 py-6 md:flex-row md:items-end md:justify-between md:px-10 md:py-8">
+        <div>
+          <h2 class="text-2xl font-semibold md:text-3xl">Floor & wall tiling</h2>
+          <p class="mt-1 text-ink-soft">Per square metre, priced by tile size.</p>
+        </div>
+      </div>
+      <table class="w-full text-left">
+        <caption class="sr-only">Tiling prices per square metre by tile size</caption>
+        <thead>
+          <tr class="text-xs font-semibold uppercase tracking-wider text-stone">
+            <th scope="col" class="px-4 py-4 sm:px-6 md:px-10">Tile size</th>
+            <th scope="col" class="px-2 py-4 text-right sm:px-3">Labour<span class="hidden sm:inline"> only</span></th>
+            <th scope="col" class="px-4 py-4 text-right sm:px-6 md:px-10">Supply<span class="hidden sm:inline"> & lay</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            pricing.tiles.map((t) => (
+              <tr class="border-t border-line">
+                <th scope="row" class="px-4 py-5 font-normal sm:px-6 md:px-10">
+                  <span class="block font-semibold text-ink">{t.label}</span>
+                  <span class="block text-sm text-stone">{t.detail}</span>
+                </th>
+                <td class="px-2 py-5 text-right align-middle whitespace-nowrap sm:px-3">
+                  <span class="text-xl font-semibold tracking-tight tabular-nums sm:text-2xl md:text-3xl">{aud(t.labour)}</span>
+                  <span class="text-sm text-stone">/m²</span>
+                </td>
+                <td class="px-4 py-5 text-right align-middle whitespace-nowrap sm:px-6 md:px-10">
+                  <span class="text-xl font-semibold tracking-tight tabular-nums sm:text-2xl md:text-3xl">{aud(t.labour + pricing.supplyAdd)}</span>
+                  <span class="text-sm text-stone">/m²</span>
+                </td>
+              </tr>
+            ))
+          }
+          <tr class="border-t border-line">
+            <th scope="row" class="px-4 py-5 font-normal sm:px-6 md:px-10">
+              <span class="block font-semibold text-ink">Extra-large</span>
+              <span class="block text-sm text-stone">1200 × 1200 mm and up</span>
+            </th>
+            <td colspan="2" class="px-4 py-5 text-right font-semibold text-ink-soft sm:px-6 md:px-10">Quoted per job</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="flex flex-wrap gap-x-8 gap-y-2 border-t border-line bg-mist px-6 py-4 text-sm text-ink-soft md:px-10">
+        <span><strong class="font-semibold text-ink">Herringbone or chevron:</strong> add {aud(pricing.patternAdd)}/m²</span>
+        <span><strong class="font-semibold text-ink">Supply & lay:</strong> tiles supplied, {aud(pricing.supplyAdd)}/m² on top of labour</span>
+      </div>
     </div>
-    <p class="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-stone">
-      Prices are per square metre of floor, in Australian dollars. Every job is confirmed in a written quote after we measure up.
-    </p>
   </section>
 
+  <!-- Splashback, extras, minimum -->
+  <section class="container-x pb-20 md:pb-28">
+    <div class="grid gap-5 md:grid-cols-3">
+      <div class="card-lift rounded-[2rem] bg-ink p-8 text-white on-dark md:p-10" data-reveal>
+        <p class="eyebrow">Kitchens</p>
+        <h2 class="mt-3 text-2xl font-semibold">Splashbacks</h2>
+        <p class="mt-4 flex items-end gap-1">
+          <span class="text-5xl font-semibold tracking-tighter tabular-nums">{aud(pricing.splashback.rate)}</span>
+          <span class="pb-1 text-white/70">/m²</span>
+        </p>
+        <p class="mt-3 leading-relaxed text-white/75">
+          Minimum {aud(pricing.splashback.minimum)} per splashback, as most are only a few square metres.
+        </p>
+      </div>
+
+      <div class="rounded-[2rem] border border-line bg-white p-8 md:col-span-2 md:p-10" data-reveal="1">
+        <p class="eyebrow">Preparation & extras</p>
+        <h2 class="mt-3 text-2xl font-semibold">Done properly underneath</h2>
+        <ul class="mt-6 divide-y divide-line">
+          {
+            pricing.extras.map((x) => (
+              <li class="flex items-baseline justify-between gap-4 py-3">
+                <span class="text-ink">{x.label}</span>
+                <span class="whitespace-nowrap font-semibold tabular-nums">
+                  {aud(x.price)}
+                  <span class="text-sm font-normal text-stone">{x.unit === 'm²' ? '/m²' : ' each'}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-5 flex flex-col gap-2 rounded-[2rem] bg-mist px-8 py-6 md:flex-row md:items-center md:justify-between md:px-10" data-reveal>
+      <p class="font-semibold">Minimum job charge: <span class="tabular-nums">{aud(pricing.minimum)}</span></p>
+      <p class="text-sm text-ink-soft">Covers travel, set-up and materials handling on small jobs.</p>
+    </div>
+  </section>
+
+  <!-- Estimator -->
   <section id="estimate" class="scroll-mt-16 bg-mist py-20 md:py-28">
     <div class="container-x">
       <div class="mx-auto max-w-2xl text-center">
         <p class="eyebrow" data-reveal>Estimator</p>
-        <h2 class="mt-3 text-4xl font-semibold md:text-5xl" data-reveal="1">Estimate your floor.</h2>
+        <h2 class="mt-3 text-4xl font-semibold md:text-5xl" data-reveal="1">Estimate your job.</h2>
         <p class="mt-4 text-lg leading-relaxed text-ink-soft" data-reveal="2">
-          Pick an option and enter your floor area for a quick guide. Your final price comes from a written quote after we measure up.
+          Choose your tiles, enter the area and add any extras. Your final price comes from a written quote after we measure up.
         </p>
       </div>
       <div class="mt-12">
-        <Estimator client:idle labour={site.rates.labour} supplied={site.rates.supplied} />
+        <Estimator client:idle pricing={pricing} />
       </div>
     </div>
   </section>
@@ -119,6 +149,9 @@ const separate = [
           ))
         }
       </ul>
+      <p class="mt-6 text-sm leading-relaxed text-stone">
+        Prices in Australian dollars. Rates are a guide for standard layouts; every job is confirmed in a written quote.
+      </p>
     </div>
   </section>
 

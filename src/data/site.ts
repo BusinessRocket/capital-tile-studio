@@ -27,13 +27,37 @@ export const site = {
     'Googong',
     'Murrumbateman',
   ],
-  // Floor tiling, per m². Wall and other work is quoted per job.
+  // Headline floor & wall tiling rates for standard tiles, per m².
   rates: {
     labour: 65, // you supply the tiles
     supplied: 95, // we supply and lay the tiles
   },
   // Only real, attributable reviews go here. The section stays hidden while empty.
   reviews: [] as { name: string; suburb: string; text: string }[],
+};
+
+export type TileSize = 'standard' | 'large' | 'mosaic';
+export type ExtraId = 'waterproofing' | 'screed' | 'removal' | 'niche';
+
+/** Full price list, all prices in AUD. The estimator and Pricing page both read from here. */
+export const pricing = {
+  // Labour rate per m² by tile size. Supply & lay adds `supplyAdd` per m².
+  tiles: [
+    { id: 'standard', label: 'Standard tiles', detail: 'Up to 600 × 600 mm', labour: site.rates.labour },
+    { id: 'large', label: 'Large format', detail: '1200 × 600 mm', labour: 80 },
+    { id: 'mosaic', label: 'Mosaic & small tiles', detail: 'Hexagon, finger, small subway', labour: 110 },
+  ] as { id: TileSize; label: string; detail: string; labour: number }[],
+  supplyAdd: site.rates.supplied - site.rates.labour,
+  patternAdd: 20, // herringbone or chevron, per m²
+  extraLarge: 'Extra-large tiles (1200 × 1200 mm and up) are quoted per job.',
+  splashback: { rate: 65, minimum: 350 },
+  extras: [
+    { id: 'waterproofing', label: 'Waterproofing', unit: 'm²', price: 55 },
+    { id: 'screed', label: 'Screed & floor levelling', unit: 'm²', price: 35 },
+    { id: 'removal', label: 'Old tile removal', unit: 'm²', price: 30 },
+    { id: 'niche', label: 'Shower or bath niche', unit: 'each', price: 250 },
+  ] as { id: ExtraId; label: string; unit: 'm²' | 'each'; price: number }[],
+  minimum: 350, // minimum charge for any job
 };
 
 export type TilePattern = 'herringbone' | 'subway' | 'hex' | 'grid' | 'stack' | 'chevron';
