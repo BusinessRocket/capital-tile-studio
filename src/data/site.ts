@@ -4,8 +4,9 @@
 export const site = {
   name: 'Capital Tile Studio',
   tagline: 'Premium tiling across Canberra',
-  phone: '0435 151 933',
-  phoneHref: '+61435151933',
+  contactName: 'Kabir',
+  phone: '0401 183 924',
+  phoneHref: '+61401183924',
   email: 'capitaltilestudioact@gmail.com',
   // TODO: real 11-digit ABN. Left empty so it is not shown or put in schema.
   abn: '',

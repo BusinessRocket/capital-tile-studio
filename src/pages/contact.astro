@@ -8,13 +8,13 @@ const sms = `sms:${site.phoneHref}?&body=${encodeURIComponent(`Hi ${site.name}, 
 const channels = [
   {
     href: `tel:${site.phoneHref}`,
-    label: 'Call',
+    label: `Call ${site.contactName}`,
     value: site.phone,
     icon: 'M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2',
   },
   {
     href: sms,
-    label: 'Text',
+    label: `Text ${site.contactName}`,
     value: site.phone,
     icon: 'M4 5h16v11H8l-4 4V5z',
   },
