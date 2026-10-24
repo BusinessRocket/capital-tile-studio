@@ -1,9 +1,5 @@
 ---
 import '@fontsource-variable/inter';
-// Display serif: only the Latin weights the headings use.
-import '@fontsource/cormorant-garamond/latin-500.css';
-import '@fontsource/cormorant-garamond/latin-600.css';
-import '@fontsource/cormorant-garamond/latin-500-italic.css';
 import '../styles/global.css';
 import Logo from '../components/Logo.astro';
 import { nav, site } from '../data/site';
@@ -51,7 +47,7 @@ const schema = {
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    <meta name="theme-color" content="#fdfcfa" />
+    <meta name="theme-color" content="#fbfbfd" />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="en_AU" />
@@ -80,7 +76,7 @@ const schema = {
       <nav class="container-x flex h-14 items-center justify-between gap-4" aria-label="Main">
         <a href="/" class="flex items-center gap-2.5 font-semibold tracking-tight min-h-[44px]" aria-label={`${site.name} home`}>
           <Logo class="h-7 w-7 text-ink" />
-          <span class="font-display text-[1.3rem] font-semibold tracking-normal">{site.name}</span>
+          <span class="text-[15px]">{site.name}</span>
         </a>
 
         <ul class="hidden md:flex items-center gap-1 text-sm">

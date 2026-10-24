@@ -85,7 +85,7 @@ export default function QuoteForm({ email, phoneHref, businessName }: Props) {
   }
 
   const input =
-    'mt-2 block w-full min-h-[48px] rounded-xl border border-line bg-white px-4 text-base text-ink placeholder:text-stone/70 transition-colors hover:border-stone focus:border-bronze focus:outline-none focus-visible:outline-none focus:ring-4 focus:ring-[#8a6a35]/15 aria-[invalid=true]:border-red-600';
+    'mt-2 block w-full min-h-[48px] rounded-xl border border-line bg-white px-4 text-base text-ink placeholder:text-stone/70 transition-colors hover:border-stone focus:border-bronze focus:outline-none focus-visible:outline-none focus:ring-4 focus:ring-[#a8540f]/15 aria-[invalid=true]:border-red-600';
   const errorText = 'mt-2 text-sm font-medium text-red-700';
   const errCount = Object.keys(errors).length;
 
@@ -155,7 +155,7 @@ export default function QuoteForm({ email, phoneHref, businessName }: Props) {
           {jobTypes.map((j) => (
             <label key={j} className="relative cursor-pointer">
               <input type="checkbox" name="job" value={j} className="peer sr-only" />
-              <span className="inline-flex min-h-[44px] items-center rounded-full border border-line bg-white px-4 text-sm font-medium text-ink-soft transition-colors hover:border-stone peer-checked:border-ink peer-checked:bg-ink peer-checked:text-white peer-focus-visible:ring-4 peer-focus-visible:ring-[#8a6a35]/30">
+              <span className="inline-flex min-h-[44px] items-center rounded-full border border-line bg-white px-4 text-sm font-medium text-ink-soft transition-colors hover:border-stone peer-checked:border-ink peer-checked:bg-ink peer-checked:text-white peer-focus-visible:ring-4 peer-focus-visible:ring-[#a8540f]/30">
                 {j}
               </span>
             </label>

@@ -31,3 +31,7 @@ pnpm-debug.log*
 # AI tooling (not part of the site)
 .claude/
 
+
+# graphify knowledge-graph output (local tool, not part of the site)
+graphify-out/
+

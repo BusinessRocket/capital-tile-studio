@@ -27,21 +27,6 @@ const chapters = [
 ];
 ---
 
-<!-- Arrival: once per visit, pure CSS, never blocks interaction for long. -->
-<script is:inline>
-  try {
-    if (sessionStorage.getItem('suite-arrived')) document.documentElement.classList.add('suite-arrived');
-    sessionStorage.setItem('suite-arrived', '1');
-  } catch {}
-</script>
-<div class="arrival" aria-hidden="true">
-  <div class="arrival-mark">
-    <span style="--i:0"></span><span style="--i:1"></span><span style="--i:2"></span><span class="brass" style="--i:3"></span>
-  </div>
-  <p class="arrival-word">Capital Tile Studio</p>
-  <p class="arrival-sub">Canberra</p>
-</div>
-
 <section class="xp relative" data-xp aria-label="Introduction">
   <div class="xp-stage sticky top-0 -mb-[100dvh] h-dvh overflow-hidden" aria-hidden="true">
     <div class="xp-fallback absolute inset-0 transition-opacity duration-1000">
@@ -53,21 +38,21 @@ const chapters = [
 
   <div class="relative z-10">
     <!-- Chapter 0: hero -->
-    <div class="relative flex min-h-[100dvh] flex-col items-center justify-start px-5 pt-14 text-center md:items-start md:justify-end md:px-12 md:pb-16 md:text-left">
-      <div class="xp-card max-w-xl rounded-[2rem] px-6 py-8 md:px-10 md:py-9">
+    <div class="flex min-h-[100dvh] flex-col items-center justify-start px-5 pt-14 text-center md:pt-20">
+      <div class="xp-card max-w-3xl rounded-[2rem] px-6 py-8 md:px-12 md:py-10">
         <p class="eyebrow rise">Canberra tiling</p>
-        <h1 class="rise mt-3 text-[3.6rem] font-semibold md:text-[5.4rem]" style="--d:1">
-          Tiling,<br class="sm:hidden" /> <em>perfected.</em>
+        <h1 class="rise mt-3 text-[3rem] leading-[1.02] font-semibold md:text-[5.5rem]" style="--d:1">
+          Tiling,<br class="sm:hidden" /> perfected.
         </h1>
-        <p class="rise mx-auto mt-5 max-w-md text-lg leading-relaxed text-ink-soft md:mx-0 md:text-xl" style="--d:2">
+        <p class="rise mx-auto mt-5 max-w-xl text-lg leading-relaxed text-ink-soft md:text-2xl md:leading-snug" style="--d:2">
           Bathrooms, floors, feature walls and outdoor areas, laid with precision. Floor tiling from ${site.rates.labour} per m².
         </p>
-        <div class="rise mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:justify-start" style="--d:3">
+        <div class="rise mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3" style="--d:3">
           <a href="/contact/#quote" class="btn btn-primary btn-glass">Get a quote</a>
           <a href="/pricing/" class="link-arrow">See pricing</a>
         </div>
       </div>
-      <p class="xp-hint mt-auto mb-24 flex flex-col items-center gap-2 text-sm font-medium text-ink-soft md:absolute md:right-12 md:bottom-16 md:mb-0">
+      <p class="xp-hint mt-auto mb-24 flex flex-col items-center gap-2 text-sm font-medium text-ink-soft md:mb-12">
         Scroll to build the room
         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
       </p>
@@ -92,7 +77,7 @@ const chapters = [
     <div class="flex min-h-[130dvh] items-end justify-center px-4 pb-28 md:items-center md:pb-0">
       <div class="xp-card w-full max-w-xl rounded-[1.75rem] p-6 text-center md:p-12" data-reveal>
         <p class="eyebrow">Floor tiling</p>
-        <h2 class="mt-2 text-3xl font-semibold md:mt-3 md:text-5xl">Premium finish.<br /><em>Honest price.</em></h2>
+        <h2 class="mt-2 text-3xl font-semibold md:mt-3 md:text-5xl">Premium finish.<br />Honest price.</h2>
         <div class="mt-6 grid grid-cols-2 divide-x divide-line">
           <div class="px-2">
             <span class="block text-[3.25rem] leading-none font-semibold tracking-tighter tabular-nums md:text-[5.5rem]">${site.rates.labour}</span>
@@ -139,94 +124,8 @@ const chapters = [
 </section>
 
 <style>
-  .arrival {
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    display: grid;
-    place-content: center;
-    justify-items: center;
-    gap: 0.9rem;
-    background: var(--color-canvas);
-    pointer-events: none;
-    animation: arrival-out 0.6s var(--ease-out-soft) 1.05s forwards;
-  }
-  :global(.suite-arrived) .arrival {
-    display: none;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .arrival {
-      display: none;
-    }
-  }
-  .arrival-mark {
-    display: grid;
-    grid-template-columns: repeat(2, 1.6rem);
-    gap: 0.28rem;
-  }
-  .arrival-mark span {
-    width: 1.6rem;
-    height: 1.6rem;
-    border-radius: 0.3rem;
-    background: var(--color-ink);
-    opacity: 0;
-    animation: arrival-tile 0.5s var(--ease-out-soft) forwards;
-    animation-delay: calc(var(--i) * 90ms);
-  }
-  .arrival-mark span:nth-child(2),
-  .arrival-mark span:nth-child(3) {
-    background: rgb(28 27 25 / 0.32);
-  }
-  .arrival-mark .brass {
-    background: linear-gradient(135deg, #d9bd85, #8a6a35);
-  }
-  .arrival-word {
-    font-family: var(--font-display);
-    font-size: 1.9rem;
-    font-weight: 500;
-    letter-spacing: 0.01em;
-    opacity: 0;
-    animation: arrival-fade 0.6s var(--ease-out-soft) 0.38s forwards;
-  }
-  .arrival-sub {
-    margin-top: -0.6rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.32em;
-    text-transform: uppercase;
-    color: var(--color-bronze);
-    opacity: 0;
-    animation: arrival-fade 0.6s var(--ease-out-soft) 0.5s forwards;
-  }
-  @keyframes arrival-tile {
-    from {
-      opacity: 0;
-      transform: translateY(10px) rotate(-8deg) scale(0.8);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-  @keyframes arrival-fade {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-  @keyframes arrival-out {
-    to {
-      opacity: 0;
-      visibility: hidden;
-    }
-  }
-
   .xp-card {
-    background: rgb(253 252 250 / 0.74);
+    background: rgb(251 251 253 / 0.72);
     -webkit-backdrop-filter: blur(18px) saturate(1.4);
     backdrop-filter: blur(18px) saturate(1.4);
     box-shadow: 0 30px 60px -40px rgb(0 0 0 / 0.35), inset 0 0 0 1px rgb(255 255 255 / 0.6);
