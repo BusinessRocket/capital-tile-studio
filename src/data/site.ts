@@ -26,9 +26,10 @@ export const site = {
     'Googong',
     'Murrumbateman',
   ],
+  // Floor tiling, per m². Wall and other work is quoted per job.
   rates: {
-    intro: 45,
-    standard: 52,
+    labour: 65, // you supply the tiles
+    supplied: 95, // we supply and lay the tiles
   },
   // Only real, attributable reviews go here. The section stays hidden while empty.
   reviews: [] as { name: string; suburb: string; text: string }[],

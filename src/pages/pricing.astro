@@ -5,10 +5,30 @@ import CtaBand from '../components/CtaBand.astro';
 import Estimator from '../components/Estimator.tsx';
 import { site } from '../data/site';
 
-// TODO (owner): confirm what the per-m² rate includes and what is quoted separately.
-const included = ['Setting out and laying floor and wall tiles', 'Standard grouting', 'Clean-up of the tiled area'];
+const check = 'M4 10.5l4 4 8-9';
+
+// TODO (owner): confirm these inclusions, and which tile range the supply price covers.
+const options = [
+  {
+    badge: 'Labour only',
+    price: site.rates.labour,
+    title: 'You supply the tiles',
+    body: 'Already chosen your tiles? We lay them for you.',
+    points: ['Setting out and laying', 'Grouting', 'Clean-up of the tiled area'],
+    dark: false,
+  },
+  {
+    badge: 'Supply & lay',
+    price: site.rates.supplied,
+    title: 'We supply the tiles',
+    body: 'One price covers the tiles and the laying, with no running around.',
+    points: ['Tiles supplied', 'Setting out and laying', 'Grouting', 'Clean-up of the tiled area'],
+    dark: true,
+  },
+];
+
 const separate = [
-  'Tiles, adhesive and grout supply',
+  'Wall tiling, splashbacks and bathrooms',
   'Removing old tiles and disposal',
   'Floor levelling or screeding',
   'Waterproofing',
@@ -17,87 +37,89 @@ const separate = [
 ---
 
 <Layout
-  title={`Tiling Prices Canberra: from $${site.rates.intro} per m²`}
-  description={`Clear tiling prices in Canberra. Introductory rate of $${site.rates.intro} per m² for floor and wall tiling (standard $${site.rates.standard}/m²). Estimate your job online.`}
+  title={`Floor Tiling Prices Canberra: $${site.rates.labour}/m² laid, $${site.rates.supplied}/m² supplied`}
+  description={`Clear floor tiling prices in Canberra: $${site.rates.labour} per m² labour only, or $${site.rates.supplied} per m² with tiles supplied. Estimate your floor online.`}
 >
   <PageHeader
     eyebrow="Pricing"
     title="Clear pricing. No surprises."
-    lead="One simple rate for floor and wall tiling, with a written quote before any work starts."
+    lead="Two simple prices for floor tiling, with a written quote before any work starts."
   />
 
   <section class="container-x pb-16 md:pb-24">
     <div class="grid gap-5 md:grid-cols-2">
-      <div class="card-lift relative rounded-[2rem] bg-ink p-8 text-white md:p-12 on-dark" data-reveal>
-        <span class="inline-flex rounded-full bg-bronze px-3 py-1 text-xs font-semibold uppercase tracking-wider">Introductory offer</span>
-        <h2 class="mt-6 text-xl font-semibold">Floor & wall tiling</h2>
-        <p class="mt-2 flex items-end gap-2">
-          <span class="text-7xl font-semibold tracking-tighter tabular-nums">${site.rates.intro}</span>
-          <span class="pb-2 text-lg text-white/70">per m²</span>
-        </p>
-        <p class="mt-4 leading-relaxed text-white/75">Our current introductory rate for standard floor and wall tiling.</p>
-        <a href="/contact/#quote" class="btn btn-primary mt-8">Lock in this rate</a>
-      </div>
-      <div class="card-lift rounded-[2rem] bg-mist p-8 md:p-12" data-reveal="1">
-        <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wider text-stone">Standard rate</span>
-        <h2 class="mt-6 text-xl font-semibold">Floor & wall tiling</h2>
-        <p class="mt-2 flex items-end gap-2">
-          <span class="text-7xl font-semibold tracking-tighter tabular-nums text-ink-soft">${site.rates.standard}</span>
-          <span class="pb-2 text-lg text-stone">per m²</span>
-        </p>
-        <p class="mt-4 leading-relaxed text-ink-soft">The rate that applies once the introductory offer ends.</p>
-      </div>
+      {
+        options.map((o, i) => (
+          <div
+            class:list={['card-lift relative flex flex-col rounded-[2rem] p-8 md:p-12', o.dark ? 'on-dark bg-ink text-white' : 'bg-mist']}
+            data-reveal={i}
+          >
+            <span
+              class:list={[
+                'inline-flex self-start rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider',
+                o.dark ? 'bg-bronze text-white' : 'bg-white text-stone',
+              ]}
+            >
+              {o.badge}
+            </span>
+            <h2 class="mt-6 text-xl font-semibold">{o.title}</h2>
+            <p class="mt-2 flex items-end gap-2">
+              <span class="text-7xl font-semibold tracking-tighter tabular-nums">${o.price}</span>
+              <span class:list={['pb-2 text-lg', o.dark ? 'text-white/70' : 'text-stone']}>per m²</span>
+            </p>
+            <p class:list={['mt-4 leading-relaxed', o.dark ? 'text-white/75' : 'text-ink-soft']}>{o.body}</p>
+            <ul class="mt-6 flex-1 space-y-2">
+              {o.points.map((p) => (
+                <li class:list={['flex items-start gap-3', o.dark ? 'text-white/85' : 'text-ink-soft']}>
+                  <svg viewBox="0 0 20 20" class:list={['mt-1 h-4 w-4 flex-none', o.dark ? 'text-bronze-light' : 'text-bronze']} fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d={check} />
+                  </svg>
+                  {p}
+                </li>
+              ))}
+            </ul>
+            <a href="/contact/#quote" class:list={['btn mt-8 self-start', o.dark ? 'btn-primary' : 'btn-dark']}>
+              Get a quote
+            </a>
+          </div>
+        ))
+      }
     </div>
+    <p class="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-stone">
+      Prices are per square metre of floor, in Australian dollars. Every job is confirmed in a written quote after we measure up.
+    </p>
   </section>
 
   <section id="estimate" class="scroll-mt-16 bg-mist py-20 md:py-28">
     <div class="container-x">
       <div class="mx-auto max-w-2xl text-center">
         <p class="eyebrow" data-reveal>Estimator</p>
-        <h2 class="mt-3 text-4xl font-semibold md:text-5xl" data-reveal="1">Estimate your job.</h2>
+        <h2 class="mt-3 text-4xl font-semibold md:text-5xl" data-reveal="1">Estimate your floor.</h2>
         <p class="mt-4 text-lg leading-relaxed text-ink-soft" data-reveal="2">
-          A quick guide to the tiling cost at our introductory rate. Your final price comes from a written quote after we measure up.
+          Pick an option and enter your floor area for a quick guide. Your final price comes from a written quote after we measure up.
         </p>
       </div>
       <div class="mt-12">
-        <Estimator client:visible intro={site.rates.intro} standard={site.rates.standard} />
+        <Estimator client:visible labour={site.rates.labour} supplied={site.rates.supplied} />
       </div>
     </div>
   </section>
 
   <section class="container-x py-20 md:py-28">
-    <h2 class="text-center text-4xl font-semibold md:text-5xl" data-reveal>What the rate covers.</h2>
-    <div class="mt-12 grid gap-5 md:grid-cols-2">
-      <div class="rounded-[2rem] border border-line p-8 md:p-10" data-reveal>
-        <h3 class="text-xl font-semibold">Included</h3>
-        <ul class="mt-5 space-y-3">
-          {
-            included.map((t) => (
-              <li class="flex items-start gap-3 text-ink-soft">
-                <svg viewBox="0 0 20 20" class="mt-1 h-4 w-4 flex-none text-bronze" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9" /></svg>
-                {t}
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-      <div class="rounded-[2rem] border border-line p-8 md:p-10" data-reveal="1">
-        <h3 class="text-xl font-semibold">Quoted separately</h3>
-        <ul class="mt-5 space-y-3">
-          {
-            separate.map((t) => (
-              <li class="flex items-start gap-3 text-ink-soft">
-                <svg viewBox="0 0 20 20" class="mt-1 h-4 w-4 flex-none text-stone" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10" /></svg>
-                {t}
-              </li>
-            ))
-          }
-        </ul>
-      </div>
+    <div class="mx-auto max-w-2xl rounded-[2rem] border border-line p-8 md:p-10" data-reveal>
+      <h2 class="text-2xl font-semibold md:text-3xl">Quoted separately</h2>
+      <p class="mt-3 leading-relaxed text-ink-soft">These depend on the job, so we price them after seeing the space.</p>
+      <ul class="mt-6 space-y-3">
+        {
+          separate.map((t) => (
+            <li class="flex items-start gap-3 text-ink-soft">
+              <svg viewBox="0 0 20 20" class="mt-1 h-4 w-4 flex-none text-stone" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10" /></svg>
+              {t}
+            </li>
+          ))
+        }
+      </ul>
     </div>
-    <p class="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-stone">
-      Prices are in Australian dollars. Rates are a guide for standard tiles and layouts; every job is confirmed in a written quote.
-    </p>
   </section>
 
   <CtaBand title="Get your exact price." lead="Send a few details and photos and we will put together a written quote." />

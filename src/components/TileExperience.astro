@@ -45,7 +45,7 @@ const chapters = [
           Tiling,<br class="sm:hidden" /> perfected.
         </h1>
         <p class="rise mx-auto mt-5 max-w-xl text-lg leading-relaxed text-ink-soft md:text-2xl md:leading-snug" style="--d:2">
-          Bathrooms, floors, feature walls and outdoor areas, laid with precision. Now from ${site.rates.intro} per m².
+          Bathrooms, floors, feature walls and outdoor areas, laid with precision. Floor tiling from ${site.rates.labour} per m².
         </p>
         <div class="rise mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3" style="--d:3">
           <a href="/contact/#quote" class="btn btn-primary">Get a quote</a>
@@ -76,13 +76,19 @@ const chapters = [
     <!-- Final chapter: price reveal -->
     <div class="flex min-h-[130dvh] items-end justify-center px-4 pb-28 md:items-center md:pb-0">
       <div class="xp-card w-full max-w-xl rounded-[1.75rem] p-6 text-center md:p-12" data-reveal>
-        <p class="eyebrow">Introductory rate</p>
+        <p class="eyebrow">Floor tiling</p>
         <h2 class="mt-2 text-3xl font-semibold md:mt-3 md:text-5xl">Premium finish.<br />Honest price.</h2>
-        <div class="mt-6 flex items-end justify-center gap-3">
-          <span class="text-[4rem] leading-none font-semibold tracking-tighter tabular-nums md:text-[7rem]">${site.rates.intro}</span>
-          <span class="pb-2 text-left text-lg leading-tight text-ink-soft md:pb-4 md:text-xl">per m²<br /><s class="text-stone">${site.rates.standard}</s></span>
+        <div class="mt-6 grid grid-cols-2 divide-x divide-line">
+          <div class="px-2">
+            <span class="block text-[3.25rem] leading-none font-semibold tracking-tighter tabular-nums md:text-[5.5rem]">${site.rates.labour}</span>
+            <span class="mt-2 block text-sm text-ink-soft md:text-base">per m², labour only</span>
+          </div>
+          <div class="px-2">
+            <span class="block text-[3.25rem] leading-none font-semibold tracking-tighter tabular-nums md:text-[5.5rem]">${site.rates.supplied}</span>
+            <span class="mt-2 block text-sm text-ink-soft md:text-base">per m², tiles supplied</span>
+          </div>
         </div>
-        <p class="mt-4 leading-relaxed text-ink-soft">For floor and wall tiling, confirmed with a written quote after we measure up.</p>
+        <p class="mt-5 leading-relaxed text-ink-soft">Confirmed with a written quote after we measure up.</p>
         <div class="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3">
           <a href="/contact/#quote" class="btn btn-primary">Get a quote</a>
           <a href="/pricing/#estimate" class="link-arrow">Estimate your job</a>
