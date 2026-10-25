@@ -29,8 +29,8 @@ export const site = {
   ],
   // Headline floor & wall tiling rates for standard tiles, per m².
   rates: {
-    labour: 65, // you supply the tiles
-    supplied: 95, // we supply and lay the tiles
+    labour: 63, // you supply the tiles
+    supplied: 93, // we supply and lay the tiles
   },
   // Only real, attributable reviews go here. The section stays hidden while empty.
   reviews: [] as { name: string; suburb: string; text: string }[],
