@@ -4,10 +4,17 @@
 export const site = {
   name: 'Capital Tile Studio',
   tagline: 'Premium tiling across Canberra',
-  contactName: 'Kabir',
-  phone: '0401 183 924',
-  phoneHref: '+61401183924',
+  phone: '0435 151 933',
+  phoneHref: '+61435151933',
   email: 'capitaltilestudioact@gmail.com',
+  // EmailJS sends quote requests from the website straight to `email` above, and the
+  // template's Auto-Reply thanks the customer. These IDs are public and safe in page code.
+  // Leave any empty to fall back to opening the visitor's own email app.
+  emailjs: {
+    serviceId: '',
+    templateId: '',
+    publicKey: '',
+  },
   // TODO: real 11-digit ABN. Left empty so it is not shown or put in schema.
   abn: '',
   locality: 'Canberra',
@@ -37,26 +44,32 @@ export const site = {
 };
 
 export type TileSize = 'standard' | 'large' | 'mosaic';
-export type ExtraId = 'waterproofing' | 'screed' | 'removal' | 'niche';
+export type ExtraId = 'waterproofing' | 'screed' | 'removal' | 'niche' | 'repairs';
+export type ExtraUnit = 'm²' | 'each' | 'hour';
 
-/** Full price list, all prices in AUD. The estimator and Pricing page both read from here. */
+/**
+ * Full price list, all prices in AUD including GST. The estimator and Pricing page both
+ * read from here. Per-m² and hourly rates sit $2 below the original list ($65 → $63 base).
+ */
 export const pricing = {
+  gstIncluded: true,
   // Labour rate per m² by tile size. Supply & lay adds `supplyAdd` per m².
   tiles: [
     { id: 'standard', label: 'Standard tiles', detail: 'Up to 600 × 600 mm', labour: site.rates.labour },
-    { id: 'large', label: 'Large format', detail: '1200 × 600 mm', labour: 80 },
-    { id: 'mosaic', label: 'Mosaic & small tiles', detail: 'Hexagon, finger, small subway', labour: 110 },
+    { id: 'large', label: 'Large format', detail: '1200 × 600 mm', labour: 78 },
+    { id: 'mosaic', label: 'Mosaic & small tiles', detail: 'Hexagon, finger, small subway', labour: 108 },
   ] as { id: TileSize; label: string; detail: string; labour: number }[],
   supplyAdd: site.rates.supplied - site.rates.labour,
   patternAdd: 20, // herringbone or chevron, per m²
   extraLarge: 'Extra-large tiles (1200 × 1200 mm and up) are quoted per job.',
-  splashback: { rate: 65, minimum: 350 },
+  splashback: { rate: 63, minimum: 350 },
   extras: [
-    { id: 'waterproofing', label: 'Waterproofing', unit: 'm²', price: 55 },
-    { id: 'screed', label: 'Screed & floor levelling', unit: 'm²', price: 35 },
-    { id: 'removal', label: 'Old tile removal', unit: 'm²', price: 30 },
+    { id: 'waterproofing', label: 'Waterproofing', unit: 'm²', price: 53 },
+    { id: 'screed', label: 'Screed & floor levelling', unit: 'm²', price: 33 },
+    { id: 'removal', label: 'Old tile removal', unit: 'm²', price: 28 },
     { id: 'niche', label: 'Shower or bath niche', unit: 'each', price: 250 },
-  ] as { id: ExtraId; label: string; unit: 'm²' | 'each'; price: number }[],
+    { id: 'repairs', label: 'Small jobs & repairs', unit: 'hour', price: 63 },
+  ] as { id: ExtraId; label: string; unit: ExtraUnit; price: number }[],
   minimum: 350, // minimum charge for any job
 };
 

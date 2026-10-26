@@ -1,16 +1,24 @@
 import { useId, useState, type ReactNode } from 'react';
-import type { ExtraId, TileSize } from '../data/site';
+import type { ExtraId, ExtraUnit, TileSize } from '../data/site';
 
 interface Pricing {
   tiles: { id: TileSize; label: string; detail: string; labour: number }[];
   supplyAdd: number;
   patternAdd: number;
   splashback: { rate: number; minimum: number };
-  extras: { id: ExtraId; label: string; unit: 'm²' | 'each'; price: number }[];
+  extras: { id: ExtraId; label: string; unit: ExtraUnit; price: number }[];
+  gstIncluded?: boolean;
   minimum: number;
 }
 
 const aud = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
+// Quantity limit and labels per pricing unit.
+const UNIT = {
+  'm²': { max: 1000, suffix: 'm²', rate: '/m²', aria: 'area in square metres' },
+  each: { max: 10, suffix: '', rate: ' each', aria: 'quantity' },
+  hour: { max: 40, suffix: 'hrs', rate: '/hour', aria: 'hours' },
+} as const;
+
 const clamp = (n: number, max: number) => Math.max(0, Math.min(max, Number.isFinite(n) ? n : 0));
 
 // Defined outside the estimator so inputs inside keep focus between renders.
@@ -36,6 +44,7 @@ export default function Estimator({ pricing }: { pricing: Pricing }) {
     screed: { on: false, qty: 20 },
     removal: { on: false, qty: 20 },
     niche: { on: false, qty: 1 },
+    repairs: { on: false, qty: 2 },
   });
 
   const tile = pricing.tiles.find((t) => t.id === size)!;
@@ -51,7 +60,10 @@ export default function Estimator({ pricing }: { pricing: Pricing }) {
     const e = extras[x.id];
     if (!e.on || e.qty <= 0) continue;
     lines.push({
-      label: x.unit === 'each' ? `${e.qty} × ${x.label.toLowerCase()}` : `${x.label}, ${e.qty} m²`,
+      label:
+        x.unit === 'each'
+          ? `${e.qty} × ${x.label.toLowerCase()}`
+          : `${x.label}, ${e.qty} ${x.unit === 'hour' ? (e.qty === 1 ? 'hour' : 'hours') : 'm²'}`,
       amount: e.qty * x.price,
     });
   }
@@ -156,7 +168,7 @@ export default function Estimator({ pricing }: { pricing: Pricing }) {
                     {x.label}{' '}
                     <span className="text-stone">
                       ({aud.format(x.price)}
-                      {x.unit === 'm²' ? '/m²' : ' each'})
+                      {UNIT[x.unit].rate})
                     </span>
                   </span>
                 </label>
@@ -165,14 +177,14 @@ export default function Estimator({ pricing }: { pricing: Pricing }) {
                     type="number"
                     inputMode="numeric"
                     min={0}
-                    max={x.unit === 'each' ? 10 : 1000}
+                    max={UNIT[x.unit].max}
                     value={e.qty}
                     disabled={!e.on}
-                    onChange={(ev) => qtyExtra(x.id, Number(ev.target.value), x.unit === 'each' ? 10 : 1000)}
-                    aria-label={`${x.label} ${x.unit === 'each' ? 'quantity' : 'area in square metres'}`}
+                    onChange={(ev) => qtyExtra(x.id, Number(ev.target.value), UNIT[x.unit].max)}
+                    aria-label={`${x.label} ${UNIT[x.unit].aria}`}
                     className={numberBox}
                   />
-                  <span className="w-6 text-stone">{x.unit === 'each' ? '' : 'm²'}</span>
+                  <span className="w-7 text-stone">{UNIT[x.unit].suffix}</span>
                 </span>
               </div>
             );
@@ -202,7 +214,7 @@ export default function Estimator({ pricing }: { pricing: Pricing }) {
           ) : (
             <p className="mt-4 text-sm text-stone">Enter an area or choose an extra to see an estimate.</p>
           )}
-          <p className="mt-5 text-xs leading-relaxed text-stone">A guide only. Your exact price is confirmed in a written quote after we measure up.</p>
+          <p className="mt-5 text-xs leading-relaxed text-stone">{pricing.gstIncluded ? 'Prices include GST. ' : ''}A guide only. Your exact price is confirmed in a written quote after we measure up.</p>
           <a href="/contact/#quote" className="btn btn-primary btn-glass mt-6 w-full">
             Get an exact quote
           </a>

@@ -2,9 +2,14 @@ import { useId, useRef, useState, type FormEvent } from 'react';
 
 interface Props {
   email: string;
+  phone: string;
   phoneHref: string;
   businessName: string;
+  /** EmailJS settings. When all are set, quotes are delivered straight to the inbox. */
+  emailjs?: { serviceId: string; templateId: string; publicKey: string };
 }
+
+type Status = 'idle' | 'sending' | 'sent' | 'error';
 
 const jobTypes = [
   'Bathroom or ensuite',
@@ -18,12 +23,15 @@ const jobTypes = [
 
 type Errors = Partial<Record<'name' | 'contact' | 'suburb', string>>;
 
-export default function QuoteForm({ email, phoneHref, businessName }: Props) {
+export default function QuoteForm({ email, phone, phoneHref, businessName, emailjs }: Props) {
   const id = useId();
   const formRef = useRef<HTMLFormElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
+  const doneRef = useRef<HTMLDivElement>(null);
   const [errors, setErrors] = useState<Errors>({});
   const [sent, setSent] = useState<null | 'email' | 'sms'>(null);
+  const [status, setStatus] = useState<Status>('idle');
+  const direct = Boolean(emailjs?.serviceId && emailjs.templateId && emailjs.publicKey);
 
   function read() {
     const fd = new FormData(formRef.current!);
@@ -64,6 +72,59 @@ export default function QuoteForm({ email, phoneHref, businessName }: Props) {
     return lines.filter((l) => l !== null).join('\n');
   }
 
+  const subjectFor = (v: ReturnType<typeof read>) => `Quote request: ${v.jobs[0] ?? 'Tiling'}, ${v.suburb}`;
+
+  function openApp(channel: 'email' | 'sms', v: ReturnType<typeof read>) {
+    const body = encodeURIComponent(message(v));
+    window.location.href =
+      channel === 'email'
+        ? `mailto:${email}?subject=${encodeURIComponent(subjectFor(v))}&body=${body}`
+        : `sms:${phoneHref}?&body=${body}`;
+    setSent(channel);
+  }
+
+  // Delivers the quote straight to the inbox via EmailJS. The template's Auto-Reply
+  // then emails the customer (when they gave an email address).
+  async function sendDirect(v: ReturnType<typeof read>) {
+    // Bots tick the hidden spam trap; pretend success and send nothing.
+    if (new FormData(formRef.current!).get('botcheck')) {
+      setStatus('sent');
+      return;
+    }
+    setStatus('sending');
+    try {
+      const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: emailjs!.serviceId,
+          template_id: emailjs!.templateId,
+          user_id: emailjs!.publicKey,
+          template_params: {
+            subject: subjectFor(v),
+            name: v.name,
+            phone: v.phone || '—',
+            email: v.email,
+            reply_to: v.email || email,
+            suburb: v.suburb,
+            job: v.jobs.join(', ') || '—',
+            area: v.area ? `${v.area} m²` : '—',
+            timing: v.timing || '—',
+            details: v.details || '—',
+            business: businessName,
+            business_phone: phone,
+          },
+        }),
+      });
+      if (!res.ok) throw new Error('Not delivered');
+      setStatus('sent');
+      formRef.current?.reset();
+      requestAnimationFrame(() => doneRef.current?.focus());
+    } catch {
+      setStatus('error');
+    }
+  }
+
   function submit(channel: 'email' | 'sms') {
     return (ev?: FormEvent) => {
       ev?.preventDefault();
@@ -74,14 +135,27 @@ export default function QuoteForm({ email, phoneHref, businessName }: Props) {
         requestAnimationFrame(() => summaryRef.current?.focus());
         return;
       }
-      const body = encodeURIComponent(message(v));
-      const href =
-        channel === 'email'
-          ? `mailto:${email}?subject=${encodeURIComponent(`Quote request: ${v.jobs[0] ?? 'Tiling'}, ${v.suburb}`)}&body=${body}`
-          : `sms:${phoneHref}?&body=${body}`;
-      window.location.href = href;
-      setSent(channel);
+      if (channel === 'email' && direct) void sendDirect(v);
+      else openApp(channel, v);
     };
+  }
+
+  if (status === 'sent') {
+    return (
+      <div ref={doneRef} tabIndex={-1} role="status" className="rounded-3xl bg-mist p-8 text-center outline-none">
+        <p className="text-2xl font-semibold">Thanks, your quote request is in.</p>
+        <p className="mt-3 leading-relaxed text-ink-soft">
+          We will get back to you soon. Photos of the space help us quote accurately: text them to{' '}
+          <a href={`sms:${phoneHref}`} className="font-semibold text-bronze underline">
+            {phone}
+          </a>
+          .
+        </p>
+        <button type="button" onClick={() => setStatus('idle')} className="btn btn-ghost mt-6">
+          Send another request
+        </button>
+      </div>
+    );
   }
 
   const input =
@@ -178,19 +252,35 @@ export default function QuoteForm({ email, phoneHref, businessName }: Props) {
         <label htmlFor={`${id}-details`} className="font-semibold">Anything else?</label>
         <textarea id={`${id}-details`} name="details" rows={4} aria-describedby={`${id}-details-hint`} className={`${input} py-3`} />
         <p id={`${id}-details-hint`} className="mt-2 text-sm text-stone">
-          Tile type, size of the room, old tiles to remove… Photos help too: attach them in your email or text.
+          Tile type, size of the room, old tiles to remove… Photos help too: {direct ? `text them to ${phone} after sending.` : 'attach them in your email or text.'}
         </p>
       </div>
 
+      {/* Spam trap: hidden from people, bots tick it. */}
+      <input type="checkbox" name="botcheck" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button type="submit" className="btn btn-primary">Send by email</button>
+        <button type="submit" disabled={status === 'sending'} aria-busy={status === 'sending'} className="btn btn-primary disabled:cursor-wait disabled:opacity-70">
+          {direct ? (status === 'sending' ? 'Sending…' : 'Send quote request') : 'Send by email'}
+        </button>
         <button type="button" onClick={submit('sms')} className="btn btn-ghost">Send as a text</button>
       </div>
       <p className="text-sm text-stone">
-        This opens your email or messaging app with your details filled in, ready to send. Nothing is sent until you press send there.
+        {direct
+          ? `Your request goes straight to ${businessName}. "Send as a text" opens your messages app instead.`
+          : 'This opens your email or messaging app with your details filled in, ready to send. Nothing is sent until you press send there.'}
       </p>
       <p aria-live="polite" className="text-sm font-medium text-ink">
-        {sent && `Your ${sent === 'email' ? 'email' : 'message'} app should now be open. If it did not open, contact us directly using the details on this page.`}
+        {status === 'error' && (
+          <span className="text-red-700">
+            Sorry, that didn't go through.{' '}
+            <button type="button" onClick={() => openApp('email', read())} className="underline">
+              Send it from your email app
+            </button>{' '}
+            or call <a href={`tel:${phoneHref}`} className="underline">{phone}</a>.
+          </span>
+        )}
+        {status !== 'error' && sent && `Your ${sent === 'email' ? 'email' : 'message'} app should now be open. If it did not open, contact us directly using the details on this page.`}
       </p>
     </form>
   );
