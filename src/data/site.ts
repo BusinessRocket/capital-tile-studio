@@ -15,8 +15,7 @@ export const site = {
     templateId: '',
     publicKey: '',
   },
-  // TODO: real 11-digit ABN. Left empty so it is not shown or put in schema.
-  abn: '',
+  abn: '16 298 142 758',
   locality: 'Canberra',
   region: 'ACT',
   // TODO: confirm the neighbouring towns you travel to.
