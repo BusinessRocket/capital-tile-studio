@@ -109,7 +109,7 @@ export default function Estimator({ pricing }: { pricing: Pricing }) {
           <div className="grid grid-cols-2 gap-3">
             {[
               { v: false, label: 'Labour only', hint: 'You supply the tiles' },
-              { v: true, label: 'Supply & lay', hint: `We supply them, +${aud.format(pricing.supplyAdd)}/m²` },
+              { v: true, label: 'Supply & lay', hint: `Our standard porcelain range, +${aud.format(pricing.supplyAdd)}/m²` },
             ].map((o) => (
               <label key={o.label} className="relative cursor-pointer">
                 <input type="radio" name={`${id}-supply`} checked={supply === o.v} onChange={() => setSupply(o.v)} className="peer sr-only" />

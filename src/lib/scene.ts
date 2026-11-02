@@ -10,7 +10,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { glazeTexture, marbleTexture, perTileUv, rippleNormalTexture, streakGlazeTexture } from './textures';
 
-type Placement = { pos: THREE.Vector3; quat: THREE.Quaternion };
+// `width` < 1 narrows a tile along its length, for cut pieces at the end of a row.
+type Placement = { pos: THREE.Vector3; quat: THREE.Quaternion; width?: number };
 export type FloorStyle = 'marble' | 'sage' | 'terracotta' | 'charcoal';
 
 interface TileGroup {
@@ -25,6 +26,8 @@ interface TileGroup {
 
 const ROOM = { halfW: 5, back: -4, front: 4, height: 5 };
 const BG = new THREE.Color('#f6f1e9');
+// How strongly each floor finish mirrors the room once it is laid.
+const SHINE: Record<FloorStyle, number> = { marble: 0.38, sage: 0.34, charcoal: 0.42, terracotta: 0.15 };
 // Low golden-hour sun so light streaks run long across the floor and up the walls.
 const SUN_DIR = new THREE.Vector3(7, 4.6, 4.2).normalize();
 
@@ -131,6 +134,9 @@ function environmentScene() {
   glow(5, 9, new THREE.Color(10, 8, 5.6), new THREE.Vector3(11.8, 3.5, 2.5), new THREE.Vector3(0, 2, 0));
   glow(3, 8, new THREE.Color(7, 5.8, 4.2), new THREE.Vector3(11.8, 3.5, -4), new THREE.Vector3(0, 2, 0));
   glow(12, 5, new THREE.Color(2.4, 2.1, 1.7), new THREE.Vector3(0, 3, 11.8), new THREE.Vector3(0, 2, 0));
+  // Soft glow beyond the back wall: the floor mirrors it as a sheen from the camera's
+  // view, so polished tiles read as glossy even before the room is built around them.
+  glow(12, 4, new THREE.Color(2.6, 2.35, 2.0), new THREE.Vector3(0, 4.5, -11.8), new THREE.Vector3(0, 2, 0));
   glow(14, 14, new THREE.Color(1.2, 1.12, 1.02), new THREE.Vector3(0, 5.8, 0), new THREE.Vector3(0, 0, 0));
   glow(14, 14, new THREE.Color(0.8, 0.68, 0.52), new THREE.Vector3(0, -5.8, 0), new THREE.Vector3(0, 0, 0));
   return env;
@@ -416,21 +422,35 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
     shadows,
   });
 
-  // Back wall: cream handmade-gloss subway (3:1), built from the bottom row up.
-  const sw = small ? 0.72 : 0.6;
-  const sh = sw / 3;
+  // Back wall: deep navy handmade-gloss subway (3:1), built from the bottom row up.
+  // Dark against the light grout so every joint reads clearly.
+  // Furthest floor tile from where laying starts; the polish reaches it last.
+  const floorReach = Math.max(...floor.target.map((tg) => Math.hypot(tg.pos.x, tg.pos.z - 1)));
+
+  // Tile size is nudged so whole rows fit the wall exactly; offset rows start and
+  // end with cut pieces, as a tiler would lay them, so the edges have no gaps.
+  const cols = Math.round((ROOM.halfW * 2) / (small ? 0.72 : 0.6));
+  const sw = (ROOM.halfW * 2) / cols;
+  const rows = Math.round(ROOM.height / (sw / 3));
+  const sh = ROOM.height / rows;
   const backTargets: Placement[] = [];
-  for (let j = 0; j * sh < ROOM.height - sh / 2; j++) {
+  for (let j = 0; j < rows; j++) {
     const off = j % 2 ? sw / 2 : 0;
-    for (let x = -ROOM.halfW - off; x < ROOM.halfW; x += sw) {
-      const cx = x + sw / 2;
-      if (cx - sw / 2 < -ROOM.halfW - 0.001 || cx + sw / 2 > ROOM.halfW + 0.001) continue;
-      backTargets.push({ pos: new THREE.Vector3(cx, j * sh + sh / 2, ROOM.back + t / 2), quat: new THREE.Quaternion() });
+    for (let x = -ROOM.halfW - off; x < ROOM.halfW - 0.001; x += sw) {
+      const x0 = Math.max(x, -ROOM.halfW);
+      const x1 = Math.min(x + sw, ROOM.halfW);
+      const cut = x1 - x0 < sw - 0.001;
+      backTargets.push({
+        pos: new THREE.Vector3((x0 + x1) / 2, j * sh + sh / 2, ROOM.back + t / 2),
+        quat: new THREE.Quaternion(),
+        width: cut ? (x1 - x0 - gap) / (sw - gap) : undefined,
+      });
     }
   }
   const ripples = rippleNormalTexture(256, 5, 2.2, 1);
   const backMat = new THREE.MeshPhysicalMaterial({
-    map: glazeTexture(0.02, 256, 5),
+    // Enough mottling that no two navy tiles look machine-identical.
+    map: glazeTexture(0.07, 256, 5),
     roughness: 0.14,
     clearcoat: 1,
     clearcoatRoughness: 0.03,
@@ -443,7 +463,7 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   const back = makeGroup({
     geometry: new RoundedBoxGeometry(sw - gap, sh - gap, t, 3, 0.012),
     material: backMat,
-    colors: ['#f3ebdd', '#f0e7d7', '#f5eee2', '#eee4d3'],
+    colors: ['#2e4057', '#2a3b52', '#33465e', '#283850'],
     targets: backTargets,
     startFor: (tg, r) => ({
       pos: new THREE.Vector3(tg.pos.x + (r() - 0.5) * 1.5, tg.pos.y + 3 + r() * 2, tg.pos.z + 2.5 + r() * 2),
@@ -508,31 +528,56 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   const decor = makeDecor(shadows);
   scene.add(decor);
 
-  // Polished floor: a soft mirror layer just above the tiles (desktop only).
+  // Polished floor: a soft mirror layer just above the tiles. Phones get a
+  // lower-resolution reflection so the floor still shines there.
   let mirror: Reflector | null = null;
   let renderMirror: ((r: THREE.WebGLRenderer, s: THREE.Scene, c: THREE.Camera) => void) | null = null;
-  if (useAO) {
+  {
+    const res = small ? 0.35 : 0.5;
     mirror = new Reflector(new THREE.PlaneGeometry(ROOM.halfW * 2, ROOM.front - ROOM.back), {
-      textureWidth: Math.round(window.innerWidth * 0.5),
-      textureHeight: Math.round(window.innerHeight * 0.5),
+      textureWidth: Math.round(window.innerWidth * res),
+      textureHeight: Math.round(window.innerHeight * res),
       clipBias: 0.003,
       color: 0xffffff,
       multisample: 0,
       shader: {
         name: 'SoftMirror',
-        uniforms: { color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null }, opacity: { value: 0 } },
-        vertexShader: Reflector.ReflectorShader.vertexShader,
+        uniforms: { color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null }, opacity: { value: 0 }, laid: { value: 0 } },
+        vertexShader: /* glsl */ `
+          uniform mat4 textureMatrix;
+          varying vec4 vUv;
+          varying vec3 vWorldPos;
+          #include <common>
+          #include <logdepthbuf_pars_vertex>
+          void main() {
+            vUv = textureMatrix * vec4(position, 1.0);
+            vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            #include <logdepthbuf_vertex>
+          }`,
         fragmentShader: /* glsl */ `
           uniform vec3 color;
           uniform sampler2D tDiffuse;
           uniform float opacity;
+          uniform float laid;
           varying vec4 vUv;
+          varying vec3 vWorldPos;
           #include <logdepthbuf_pars_fragment>
           void main() {
             #include <logdepthbuf_fragment>
-            vec4 base = texture2DProj(tDiffuse, vUv);
+            // A light blur: polished stone gives a soft reflection, not a sharp mirror.
+            vec2 uv = vUv.xy / vUv.w;
+            const float b = 0.004;
+            vec4 base = (texture2D(tDiffuse, uv) * 2.0
+              + texture2D(tDiffuse, uv + vec2(b, 0.0)) + texture2D(tDiffuse, uv - vec2(b, 0.0))
+              + texture2D(tDiffuse, uv + vec2(0.0, b)) + texture2D(tDiffuse, uv - vec2(0.0, b))) / 6.0;
+            // Fresnel: like real polished stone, reflections strengthen at low viewing angles.
+            float facing = clamp(normalize(cameraPosition - vWorldPos).y, 0.0, 1.0);
+            float fresnel = mix(0.6, 1.0, pow(1.0 - facing, 3.0));
             // Alpha comes from the reflection itself, so empty sky reflects nothing.
-            gl_FragColor = vec4(base.rgb * color, base.a * opacity);
+            // Only shine where tiles have landed: the floor is laid outward from (0, 1).
+            float landed = 1.0 - smoothstep(laid - 0.5, laid, distance(vWorldPos.xz, vec2(0.0, 1.0)));
+            gl_FragColor = vec4(base.rgb * color, base.a * opacity * fresnel * landed);
             #include <tonemapping_fragment>
             #include <colorspace_fragment>
           }`,
@@ -560,10 +605,11 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
   // Showroom mode: alternative floor finishes sharing the same layout. Switching
   // re-tiles the floor in a wave from the centre.
   const floorStyles: Record<FloorStyle, THREE.InstancedMesh> = { marble: floor.mesh } as Record<FloorStyle, THREE.InstancedMesh>;
+  // Glazed sage and polished charcoal shine like the marble; terracotta has a satin sealer.
   const styleDefs: [FloorStyle, THREE.MeshPhysicalMaterial, string[]][] = [
-    ['sage', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.07, 256, 9), roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.1 }), ['#9fac94', '#94a189', '#a8b39e', '#8d9a83', '#a1ad97']],
-    ['terracotta', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.1, 256, 13), roughness: 0.6, clearcoat: 0.15, clearcoatRoughness: 0.5 }), ['#c4714d', '#ba6744', '#cc7b57', '#b3613e', '#c06c48']],
-    ['charcoal', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.05, 256, 17), roughness: 0.32, clearcoat: 0.5, clearcoatRoughness: 0.25 }), ['#3d3d40', '#363639', '#434347', '#313134']],
+    ['sage', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.07, 256, 9), roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.04 }), ['#9fac94', '#94a189', '#a8b39e', '#8d9a83', '#a1ad97']],
+    ['terracotta', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.12, 256, 13), roughness: 0.42, clearcoat: 0.7, clearcoatRoughness: 0.18 }), ['#c4714d', '#ba6744', '#cc7b57', '#b3613e', '#c06c48']],
+    ['charcoal', new THREE.MeshPhysicalMaterial({ map: glazeTexture(0.06, 256, 17), roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.04 }), ['#3d3d40', '#363639', '#434347', '#313134']],
   ];
   const sr = rng(91);
   const styleColor = new THREE.Color();
@@ -640,7 +686,7 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
         if (g === floor) {
           writeFloor(i);
         } else {
-          m4.compose(pos, quat, one);
+          m4.compose(pos, quat, tg.width ? scl.set(tg.width, 1, 1) : one);
           g.mesh.setMatrixAt(i, m4);
         }
       }
@@ -670,12 +716,16 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
     decor.visible = bk > 0;
     decor.position.y = (1 - easeOutBack(bk)) * 3;
 
-    // The floor turns mirror-polished once it is fully laid.
+    // The polish spreads across the floor as each tile lands, so it shines
+    // while it is being laid, not only once it is finished.
     if (mirror) {
       const fl = (p - floor.range[0]) / (floor.range[1] - floor.range[0]);
-      const o = clamp01((fl - 1) * 4) * 0.34;
-      (mirror.material as THREE.ShaderMaterial).uniforms.opacity.value = o;
-      mirror.visible = o > 0.001;
+      // A tile lands when fl reaches 0.3 + 0.7 × its normalised delay (see the tile loop above).
+      const reach = fl >= 1 ? floorReach + 1 : floorReach * clamp01((fl - 0.3) / 0.7);
+      const u = (mirror.material as THREE.ShaderMaterial).uniforms;
+      u.opacity.value = SHINE[activeStyle];
+      u.laid.value = reach;
+      mirror.visible = reach > 0;
     }
 
     // Olive leaves outside the window sway, so their shadows drift.
@@ -730,7 +780,10 @@ export function createScene(canvas: HTMLCanvasElement, getProgress: () => number
       scene.background = null;
       scene.fog = null;
       renderer.setClearAlpha(0);
+      // Reuse this frame's shadows rather than drawing them twice.
+      renderer.shadowMap.autoUpdate = false;
       renderMirror(renderer, scene, camera);
+      renderer.shadowMap.autoUpdate = true;
       scene.background = bg;
       scene.fog = fog;
       renderer.setClearAlpha(clear);
