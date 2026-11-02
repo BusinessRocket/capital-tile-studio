@@ -1,0 +1,56 @@
+[
+  {
+    "file": "marble-feature-wall-fireplace.jpg",
+    "title": "Book-matched slab feature wall",
+    "service": "walls",
+    "alt": "Floor-to-ceiling book-matched marble-look slab feature wall with a built-in linear fireplace, under a crystal chandelier"
+  },
+  {
+    "file": "marble-slab-splashback.jpg",
+    "title": "Full-height slab splashback",
+    "service": "splashbacks",
+    "alt": "Full-height marble-look slab splashback above a stone benchtop, framed by timber cabinetry"
+  },
+  {
+    "file": "grey-kitchen-floor.jpg",
+    "title": "Kitchen floor tiling",
+    "service": "floors",
+    "alt": "Grey concrete-look floor tiles laid in a straight grid through a galley kitchen with dark cabinets"
+  },
+  {
+    "file": "patterned-bathroom-floor-wall.jpg",
+    "title": "Patterned bathroom floor and feature wall",
+    "service": "bathrooms",
+    "alt": "Black and white patterned tiles running across a bathroom floor and up the end wall, with white wall tiles on the sides"
+  },
+  {
+    "file": "penny-round-mosaic-niche.jpg",
+    "title": "Penny-round mosaic niche",
+    "service": "bathrooms",
+    "alt": "Recessed shower niche lined with white penny-round mosaic tiles"
+  },
+  {
+    "file": "bathroom-walls-double-niche.jpg",
+    "title": "Bathroom with double shower niches",
+    "service": "bathrooms",
+    "alt": "Bathroom with large grey wall tiles, two recessed shower niches and white tiles under the window"
+  },
+  {
+    "file": "stone-fireplace-feature.jpg",
+    "title": "Natural stone fireplace",
+    "service": "walls",
+    "alt": "Natural stone cladding laid in an irregular pattern around a wood heater fireplace"
+  },
+  {
+    "file": "sandstone-wall-cladding.jpg",
+    "title": "Sandstone wall cladding",
+    "service": "outdoor",
+    "alt": "Long outdoor wall clad in irregular sandstone pieces in afternoon sun"
+  },
+  {
+    "file": "granite-paver-walkway.jpg",
+    "title": "Granite paver walkway",
+    "service": "outdoor",
+    "alt": "Commercial walkway paved in light and dark grey granite pavers in a staggered pattern"
+  }
+]

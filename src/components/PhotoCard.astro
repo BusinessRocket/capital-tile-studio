@@ -1,0 +1,34 @@
+---
+import { Picture } from 'astro:assets';
+import type { GalleryPhoto } from '../lib/gallery';
+
+interface Props {
+  photo: GalleryPhoto;
+  eager?: boolean;
+  sizes?: string;
+}
+
+// Defaults match the gallery's columns: 1 on mobile, 2 from sm, 3 from lg
+// inside the 72rem container.
+const {
+  photo,
+  eager = false,
+  sizes = '(min-width: 1152px) 350px, (min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw',
+} = Astro.props;
+---
+
+<figure class="card-lift relative overflow-hidden rounded-3xl bg-mist">
+  <Picture
+    src={photo.image}
+    alt={photo.alt}
+    formats={['avif', 'webp']}
+    widths={[400, 700, 1000, 1400]}
+    sizes={sizes}
+    loading={eager ? 'eager' : 'lazy'}
+    class="block h-auto w-full"
+  />
+  <figcaption class="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-2xl bg-white/85 px-4 py-3 text-sm backdrop-blur">
+    <span class="font-semibold text-ink">{photo.title}</span>
+    <span class="flex-none rounded-full bg-mist px-2.5 py-1 text-xs font-medium text-stone">{photo.serviceLabel}</span>
+  </figcaption>
+</figure>
