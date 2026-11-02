@@ -25,6 +25,9 @@ const sms = `sms:${site.phoneHref}?&body=${encodeURIComponent(`Hi ${site.name}, 
         <a href={`tel:${site.phoneHref}`} class="btn btn-light">Call {site.phone}</a>
         <a href={sms} class="btn text-white shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.35)] hover:shadow-[inset_0_0_0_1.5px_#fff]">Send a text</a>
       </div>
+      <p class="mt-6 text-sm text-white/65">
+        {site.yearsExperience} years’ experience · {site.insurance} · ABN {site.abn}
+      </p>
     </div>
   </div>
 </section>

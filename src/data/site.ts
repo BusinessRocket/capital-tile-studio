@@ -11,12 +11,13 @@ export const site = {
   // template's Auto-Reply thanks the customer. These IDs are public and safe in page code.
   // Leave any empty to fall back to opening the visitor's own email app.
   emailjs: {
-    serviceId: '',
-    templateId: '',
-    publicKey: '',
+    serviceId: 'service_47n6a95',
+    templateId: 'template_vyj0uka',
+    publicKey: 'RsX4_2ggoC8he6PeF',
   },
   abn: '16 298 142 758',
   yearsExperience: 14,
+  insurance: '$10 million public liability insurance',
   locality: 'Canberra',
   region: 'ACT',
   // TODO: confirm the neighbouring towns you travel to.
@@ -177,7 +178,7 @@ export const services: {
     points: ['Cracked tile replacement', 'Regrouting floors and showers', 'Silicone replacement', 'Small jobs welcome'],
     prices: [
       { label: extra('repairs').label, price: `${aud(extra('repairs').price)}/hour` },
-      { label: 'Minimum job charge', price: aud(pricing.minimum) },
+      { label: 'Minimum charge (covers travel & set-up)', price: aud(pricing.minimum) },
     ],
     pricesAnchor: 'extras',
     pattern: 'chevron',

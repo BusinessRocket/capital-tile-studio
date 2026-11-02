@@ -100,7 +100,10 @@ const separate = [
           {
             pricing.extras.map((x) => (
               <li class="flex items-baseline justify-between gap-4 py-3">
-                <span class="text-ink">{x.label}</span>
+                <span class="text-ink">
+                  {x.label}
+                  {x.unit === 'hour' && <span class="block text-sm text-stone">{aud(pricing.minimum)} minimum, covers travel and set-up</span>}
+                </span>
                 <span class="whitespace-nowrap font-semibold tabular-nums">
                   {aud(x.price)}
                   <span class="text-sm font-normal text-stone">{x.unit === 'm²' ? '/m²' : x.unit === 'hour' ? '/hour' : ' each'}</span>
