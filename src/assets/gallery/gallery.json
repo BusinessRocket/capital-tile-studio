@@ -18,10 +18,28 @@
     "alt": "Grey concrete-look floor tiles laid in a straight grid through a galley kitchen with dark cabinets"
   },
   {
+    "file": "marble-shower-room.jpg",
+    "title": "Marble-look shower room",
+    "service": "bathrooms",
+    "alt": "Bathroom in large-format polished marble-look tiles on the floor and walls, with a tiled shower base and wall shelves"
+  },
+  {
+    "file": "white-marble-hallway-floor.jpg",
+    "title": "Polished hallway floor",
+    "service": "floors",
+    "alt": "Large-format polished white marble-look tiles running through a hallway and into the kitchen"
+  },
+  {
     "file": "patterned-bathroom-floor-wall.jpg",
     "title": "Patterned bathroom floor and feature wall",
     "service": "bathrooms",
     "alt": "Black and white patterned tiles running across a bathroom floor and up the end wall, with white wall tiles on the sides"
+  },
+  {
+    "file": "white-marble-kitchen-floor.jpg",
+    "title": "Large-format kitchen floor",
+    "service": "floors",
+    "alt": "Bright kitchen with large-format white marble-look floor tiles and a matching marble island"
   },
   {
     "file": "penny-round-mosaic-niche.jpg",
@@ -30,16 +48,34 @@
     "alt": "Recessed shower niche lined with white penny-round mosaic tiles"
   },
   {
+    "file": "gold-vein-marble-bathroom.jpg",
+    "title": "Gold-vein marble bathroom",
+    "service": "bathrooms",
+    "alt": "Bathroom tiled floor to ceiling in white marble-look tiles with gold veining, with a rain shower and vanity"
+  },
+  {
     "file": "bathroom-walls-double-niche.jpg",
     "title": "Bathroom with double shower niches",
     "service": "bathrooms",
     "alt": "Bathroom with large grey wall tiles, two recessed shower niches and white tiles under the window"
   },
   {
+    "file": "gold-vein-marble-floor.jpg",
+    "title": "Gold-vein marble floor, freshly laid",
+    "service": "floors",
+    "alt": "Freshly laid polished marble-look floor tiles with grey and gold veining, levelling clips still in place"
+  },
+  {
     "file": "stone-fireplace-feature.jpg",
     "title": "Natural stone fireplace",
     "service": "walls",
     "alt": "Natural stone cladding laid in an irregular pattern around a wood heater fireplace"
+  },
+  {
+    "file": "slate-patio.jpg",
+    "title": "Charcoal outdoor patio",
+    "service": "outdoor",
+    "alt": "Outdoor patio paved in large charcoal slate-look tiles beside a garden with potted plants"
   },
   {
     "file": "sandstone-wall-cladding.jpg",
