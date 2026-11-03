@@ -16,13 +16,14 @@ export const photos = entries.map((entry) => {
   };
 });
 
-// One job photo per service for the service cards. Services left out keep their tile drawing.
+// One job photo per service for the service cards. A service left out falls back to its tile drawing.
 const coverFiles: Record<string, string> = {
   bathrooms: 'patterned-bathroom-floor-wall.jpg',
   floors: 'grey-kitchen-floor.jpg',
   walls: 'marble-feature-wall-fireplace.jpg',
   splashbacks: 'marble-slab-splashback.jpg',
   outdoor: 'sandstone-wall-cladding.jpg',
+  repairs: 'laundry-floor-retile.jpg',
 };
 
 export const serviceCover = (slug: string) => photos.find((p) => p.file === coverFiles[slug]);
