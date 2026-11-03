@@ -4,7 +4,7 @@
 export const site = {
   name: 'Capital Tile Studio',
   tagline: 'Premium tiling across Canberra',
-  phone: '0435 151 933',
+  phone: '+61 435 151 933',
   phoneHref: '+61435151933',
   email: 'capitaltilestudioact@gmail.com',
   // EmailJS sends quote requests from the website straight to `email` above, and the
