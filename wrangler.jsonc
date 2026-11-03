@@ -2,6 +2,13 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "capital-tile-studio",
   "compatibility_date": "2026-10-19",
+  // Cloudflare creates the DNS records and certificates for these on deploy.
+  "routes": [
+    { "pattern": "capitaltilestudio.com.au", "custom_domain": true },
+    { "pattern": "www.capitaltilestudio.com.au", "custom_domain": true }
+  ],
+  // Keep the old address working for links already shared; pages point search engines at the domain.
+  "workers_dev": true,
   "assets": {
     "directory": "./dist",
     "not_found_handling": "404-page"

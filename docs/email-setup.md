@@ -87,8 +87,8 @@ In **Account → Security**:
 
 - Leave **"Allow EmailJS API for non-browser applications"** switched **off** (the default).
   The website sends from the visitor's browser, so it keeps working.
-- If your plan shows an allowed-domains list, add
-  `capital-tile-studio.capital-tile-studio.workers.dev`, so only your site can send with your key.
+- If your plan shows an allowed-domains list, add `capitaltilestudio.com.au` and
+  `www.capitaltilestudio.com.au`, so only your site can send with your key.
 
 ## 5. Turn it on
 
