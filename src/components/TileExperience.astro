@@ -60,7 +60,7 @@ const chapters = [
 
     {
       chapters.map((c) => (
-        <div class:list={['flex min-h-[130dvh] items-end px-4 pb-28 md:items-center md:px-12 md:pb-0', c.side === 'right' ? 'md:justify-end' : 'md:justify-start']}>
+        <div class:list={['flex min-h-[75dvh] md:min-h-[130dvh] items-end px-4 pb-28 md:items-center md:px-12 md:pb-0', c.side === 'right' ? 'md:justify-end' : 'md:justify-start']}>
           <div class="xp-card mx-auto w-full max-w-md rounded-[1.75rem] p-6 md:mx-0 md:p-10" data-reveal>
             <p class="eyebrow">{c.eyebrow}</p>
             <h2 class="mt-2 text-3xl font-semibold leading-tight md:mt-3 md:text-5xl">{c.title}</h2>
@@ -73,8 +73,9 @@ const chapters = [
       ))
     }
 
-    <!-- Final chapter: price reveal -->
-    <div class="flex min-h-[130dvh] items-end justify-center px-4 pb-28 md:items-center md:pb-0">
+    <!-- Final chapter: price reveal. Chapters are shorter on phones so the
+         intro takes about 40% less scrolling; cards still meet the same scene beats. -->
+    <div class="flex min-h-[85dvh] md:min-h-[130dvh] items-end justify-center px-4 pb-28 md:items-center md:pb-0">
       <div class="xp-card w-full max-w-xl rounded-[1.75rem] p-6 text-center md:p-12" data-reveal>
         <p class="eyebrow">Floor tiling</p>
         <h2 class="mt-2 text-3xl font-semibold md:mt-3 md:text-5xl">Premium finish.<br />Honest price.</h2>
