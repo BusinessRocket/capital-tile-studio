@@ -5,7 +5,11 @@ import CtaBand from '../components/CtaBand.astro';
 import TileExperience from '../components/TileExperience.astro';
 import PhotoCard from '../components/PhotoCard.astro';
 import { services, site } from '../data/site';
-import { photos } from '../lib/gallery';
+import { otherPhotos, serviceCover } from '../lib/gallery';
+import { Picture } from 'astro:assets';
+
+const zoom =
+  'transition-transform duration-700 ease-[var(--ease-out-soft)] group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100';
 
 const steps = [
   { n: '01', title: 'Get in touch', body: 'Call, text or send the quote form with a few details and photos of the space.' },
@@ -62,15 +66,27 @@ const craft = [
             <li data-reveal={i % 3}>
               <a href={`/services/#${s.slug}`} class="card-lift group flex h-full flex-col overflow-hidden rounded-3xl bg-white">
                 <div class="relative aspect-[16/10] overflow-hidden">
-                  <TileArt
-                    pattern={s.pattern}
-                    palette={s.palette}
-                    width={640}
-                    height={400}
-                    unit={s.pattern === 'hex' ? 30 : 38}
-                    seed={i + 3}
-                    class="h-full w-full transition-transform duration-700 ease-[var(--ease-out-soft)] group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                  />
+                  {serviceCover(s.slug) ? (
+                    <Picture
+                      src={serviceCover(s.slug)!.image}
+                      alt={serviceCover(s.slug)!.alt}
+                      formats={['avif', 'webp']}
+                      widths={[400, 700, 1000]}
+                      sizes="(min-width: 1152px) 370px, (min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw"
+                      loading="lazy"
+                      class={`h-full w-full object-cover ${zoom}`}
+                    />
+                  ) : (
+                    <TileArt
+                      pattern={s.pattern}
+                      palette={s.palette}
+                      width={640}
+                      height={400}
+                      unit={s.pattern === 'hex' ? 30 : 38}
+                      seed={i + 3}
+                      class={`h-full w-full ${zoom}`}
+                    />
+                  )}
                 </div>
                 <div class="flex flex-1 flex-col p-6">
                   <h3 class="text-xl font-semibold">{s.title}</h3>
@@ -97,7 +113,7 @@ const craft = [
 
     <ul class="mt-12 grid items-start gap-5 sm:grid-cols-3">
       {
-        photos.slice(0, 3).map((photo, i) => (
+        otherPhotos.slice(0, 3).map((photo, i) => (
           <li data-reveal={i}>
             <PhotoCard photo={photo} sizes="(min-width: 1152px) 350px, (min-width: 640px) 31vw, 100vw" />
           </li>
