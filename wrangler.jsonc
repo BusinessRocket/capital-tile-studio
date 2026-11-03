@@ -2,15 +2,21 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "capital-tile-studio",
   "compatibility_date": "2026-10-19",
+  // Redirects every other address to the main domain, then serves dist/.
+  "main": "worker/index.js",
   // Cloudflare creates the DNS records and certificates for these on deploy.
   "routes": [
     { "pattern": "capitaltilestudio.com.au", "custom_domain": true },
-    { "pattern": "www.capitaltilestudio.com.au", "custom_domain": true }
+    { "pattern": "www.capitaltilestudio.com.au", "custom_domain": true },
+    { "pattern": "capitaltilestudio.au", "custom_domain": true },
+    { "pattern": "www.capitaltilestudio.au", "custom_domain": true }
   ],
-  // Keep the old address working for links already shared; pages point search engines at the domain.
+  // Kept on so links already shared still work; the worker redirects them to the domain.
   "workers_dev": true,
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true,
     "not_found_handling": "404-page"
   }
 }
